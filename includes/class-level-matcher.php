@@ -1,261 +1,304 @@
 <?php
 /**
- * Level Matcher - Find or create membership levels
+ * Level Matcher - Find or create membership levels.
+ *
+ * @package PMPro_Magic_Levels
+ * @since 1.0.0
  */
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * PMPRO_Magic_Levels_Level_Matcher class.
+ *
+ * Handles finding existing levels or creating new ones based on parameters.
+ *
+ * @since 1.0.0
+ */
 class PMPRO_Magic_Levels_Level_Matcher {
 
-    /**
-     * Find or create a level based on parameters
-     */
-    public function find_or_create( $params ) {
-        // Generate cache key
-        $cache_key = PMPRO_Magic_Levels_Cache::generate_key( $params );
+	/**
+	 * Find or create a level based on parameters.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $params Level parameters.
+	 * @return array Result with success, level_id, and other metadata.
+	 */
+	public function find_or_create( $params ) {
+		// Generate cache key.
+		$cache_key = PMPRO_Magic_Levels_Cache::generate_key( $params );
 
-        // Check cache
-        $cached_level_id = PMPRO_Magic_Levels_Cache::get( $cache_key );
-        
-        if ( $cached_level_id !== false ) {
-            return [
-                'success' => true,
-                'level_id' => $cached_level_id,
-                'level_created' => false,
-                'cached' => true
-            ];
-        }
+		// Check cache.
+		$cached_level_id = PMPRO_Magic_Levels_Cache::get( $cache_key );
 
-        // Search database for matching level
-        $level_id = $this->find_matching_level( $params );
+		if ( false !== $cached_level_id ) {
+			return array(
+				'success'       => true,
+				'level_id'      => $cached_level_id,
+				'level_created' => false,
+				'cached'        => true,
+			);
+		}
 
-        if ( $level_id ) {
-            // Cache the found level
-            PMPRO_Magic_Levels_Cache::set( $cache_key, $level_id );
-            
-            return [
-                'success' => true,
-                'level_id' => $level_id,
-                'level_created' => false,
-                'cached' => false
-            ];
-        }
+		// Search database for matching level.
+		$level_id = $this->find_matching_level( $params );
 
-        // Create new level
-        $new_level_id = $this->create_level( $params );
+		if ( $level_id ) {
+			// Cache the found level.
+			PMPRO_Magic_Levels_Cache::set( $cache_key, $level_id );
 
-        if ( ! $new_level_id ) {
-            return [
-                'success' => false,
-                'error' => 'Failed to create level',
-                'code' => 'level_creation_failed'
-            ];
-        }
+			return array(
+				'success'       => true,
+				'level_id'      => $level_id,
+				'level_created' => false,
+				'cached'        => false,
+			);
+		}
 
-        // Cache the new level
-        PMPRO_Magic_Levels_Cache::set( $cache_key, $new_level_id );
+		// Create new level.
+		$new_level_id = $this->create_level( $params );
 
-        // Increment daily counter
-        $validator = new PMPRO_Magic_Levels_Validator();
-        $validator->increment_daily_counter();
+		if ( ! $new_level_id ) {
+			return array(
+				'success' => false,
+				'error'   => 'Failed to create level',
+				'code'    => 'level_creation_failed',
+			);
+		}
 
-        return [
-            'success' => true,
-            'level_id' => $new_level_id,
-            'level_created' => true,
-            'cached' => false
-        ];
-    }
+		// Cache the new level.
+		PMPRO_Magic_Levels_Cache::set( $cache_key, $new_level_id );
 
-    /**
-     * Find matching level in database
-     */
-    private function find_matching_level( $params ) {
-        global $wpdb;
+		// Increment daily counter.
+		$validator = new PMPRO_Magic_Levels_Validator();
+		$validator->increment_daily_counter();
 
-        // Build WHERE clause for exact match
-        $where_conditions = [ '1=1' ];
-        $where_values = [];
+		return array(
+			'success'       => true,
+			'level_id'      => $new_level_id,
+			'level_created' => true,
+			'cached'        => false,
+		);
+	}
 
-        // Name (required)
-        $where_conditions[] = 'name = %s';
-        $where_values[] = $params['name'];
+	/**
+	 * Find matching level in database.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $params Level parameters.
+	 * @return int|null Level ID if found, null otherwise.
+	 */
+	private function find_matching_level( $params ) {
+		global $wpdb;
 
-        // Billing amount
-        $billing_amount = isset( $params['billing_amount'] ) ? floatval( $params['billing_amount'] ) : 0;
-        $where_conditions[] = 'billing_amount = %f';
-        $where_values[] = $billing_amount;
+		// Build WHERE clause for exact match.
+		$where_conditions = array( '1=1' );
+		$where_values     = array();
 
-        // Cycle number
-        $cycle_number = isset( $params['cycle_number'] ) ? intval( $params['cycle_number'] ) : 0;
-        $where_conditions[] = 'cycle_number = %d';
-        $where_values[] = $cycle_number;
+		// Name (required).
+		$where_conditions[] = 'name = %s';
+		$where_values[]     = $params['name'];
 
-        // Cycle period
-        $cycle_period = isset( $params['cycle_period'] ) ? $params['cycle_period'] : '';
-        $where_conditions[] = 'cycle_period = %s';
-        $where_values[] = $cycle_period;
+		// Billing amount.
+		$billing_amount     = isset( $params['billing_amount'] ) ? floatval( $params['billing_amount'] ) : 0;
+		$where_conditions[] = 'billing_amount = %f';
+		$where_values[]     = $billing_amount;
 
-        // Initial payment
-        $initial_payment = isset( $params['initial_payment'] ) ? floatval( $params['initial_payment'] ) : 0;
-        $where_conditions[] = 'initial_payment = %f';
-        $where_values[] = $initial_payment;
+		// Cycle number.
+		$cycle_number       = isset( $params['cycle_number'] ) ? intval( $params['cycle_number'] ) : 0;
+		$where_conditions[] = 'cycle_number = %d';
+		$where_values[]     = $cycle_number;
 
-        // Trial amount
-        $trial_amount = isset( $params['trial_amount'] ) ? floatval( $params['trial_amount'] ) : 0;
-        $where_conditions[] = 'trial_amount = %f';
-        $where_values[] = $trial_amount;
+		// Cycle period.
+		$cycle_period       = isset( $params['cycle_period'] ) ? $params['cycle_period'] : '';
+		$where_conditions[] = 'cycle_period = %s';
+		$where_values[]     = $cycle_period;
 
-        // Trial limit
-        $trial_limit = isset( $params['trial_limit'] ) ? intval( $params['trial_limit'] ) : 0;
-        $where_conditions[] = 'trial_limit = %d';
-        $where_values[] = $trial_limit;
+		// Initial payment.
+		$initial_payment    = isset( $params['initial_payment'] ) ? floatval( $params['initial_payment'] ) : 0;
+		$where_conditions[] = 'initial_payment = %f';
+		$where_values[]     = $initial_payment;
 
-        // Billing limit
-        $billing_limit = isset( $params['billing_limit'] ) ? intval( $params['billing_limit'] ) : 0;
-        $where_conditions[] = 'billing_limit = %d';
-        $where_values[] = $billing_limit;
+		// Trial amount.
+		$trial_amount       = isset( $params['trial_amount'] ) ? floatval( $params['trial_amount'] ) : 0;
+		$where_conditions[] = 'trial_amount = %f';
+		$where_values[]     = $trial_amount;
 
-        // Expiration number
-        $expiration_number = isset( $params['expiration_number'] ) ? intval( $params['expiration_number'] ) : 0;
-        $where_conditions[] = 'expiration_number = %d';
-        $where_values[] = $expiration_number;
+		// Trial limit.
+		$trial_limit        = isset( $params['trial_limit'] ) ? intval( $params['trial_limit'] ) : 0;
+		$where_conditions[] = 'trial_limit = %d';
+		$where_values[]     = $trial_limit;
 
-        // Expiration period
-        $expiration_period = isset( $params['expiration_period'] ) ? $params['expiration_period'] : '';
-        $where_conditions[] = 'expiration_period = %s';
-        $where_values[] = $expiration_period;
+		// Billing limit.
+		$billing_limit      = isset( $params['billing_limit'] ) ? intval( $params['billing_limit'] ) : 0;
+		$where_conditions[] = 'billing_limit = %d';
+		$where_values[]     = $billing_limit;
 
-        // Build query
-        $where_clause = implode( ' AND ', $where_conditions );
-        $query = "SELECT id FROM {$wpdb->pmpro_membership_levels} WHERE {$where_clause} LIMIT 1";
+		// Expiration number.
+		$expiration_number  = isset( $params['expiration_number'] ) ? intval( $params['expiration_number'] ) : 0;
+		$where_conditions[] = 'expiration_number = %d';
+		$where_values[]     = $expiration_number;
 
-        // Execute query
-        $level_id = $wpdb->get_var( $wpdb->prepare( $query, $where_values ) );
+		// Expiration period.
+		$expiration_period  = isset( $params['expiration_period'] ) ? $params['expiration_period'] : '';
+		$where_conditions[] = 'expiration_period = %s';
+		$where_values[]     = $expiration_period;
 
-        return $level_id ? intval( $level_id ) : null;
-    }
+		// Build query.
+		$where_clause = implode( ' AND ', $where_conditions );
+		$query        = "SELECT id FROM {$wpdb->pmpro_membership_levels} WHERE {$where_clause} LIMIT 1";
 
-    /**
-     * Create new level
-     */
-    private function create_level( $params ) {
-        // Create level object
-        $level = new PMPro_Membership_Level();
+		// Execute query.
+		$level_id = $wpdb->get_var( $wpdb->prepare( $query, $where_values ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 
-        // Set required fields
-        $level->name = sanitize_text_field( $params['name'] );
+		return $level_id ? intval( $level_id ) : null;
+	}
 
-        // Set optional fields
-        if ( isset( $params['description'] ) ) {
-            $level->description = sanitize_textarea_field( $params['description'] );
-        }
+	/**
+	 * Create new level.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $params Level parameters.
+	 * @return int|null Level ID if created, null otherwise.
+	 */
+	private function create_level( $params ) {
+		// Create level object.
+		$level = new PMPro_Membership_Level();
 
-        if ( isset( $params['confirmation'] ) ) {
-            $level->confirmation = sanitize_textarea_field( $params['confirmation'] );
-        }
+		// Set required fields.
+		$level->name = sanitize_text_field( $params['name'] );
 
-        $level->initial_payment = isset( $params['initial_payment'] ) ? floatval( $params['initial_payment'] ) : 0;
-        $level->billing_amount = isset( $params['billing_amount'] ) ? floatval( $params['billing_amount'] ) : 0;
-        $level->cycle_number = isset( $params['cycle_number'] ) ? intval( $params['cycle_number'] ) : 0;
-        $level->cycle_period = isset( $params['cycle_period'] ) ? sanitize_text_field( $params['cycle_period'] ) : '';
-        $level->billing_limit = isset( $params['billing_limit'] ) ? intval( $params['billing_limit'] ) : 0;
-        $level->trial_amount = isset( $params['trial_amount'] ) ? floatval( $params['trial_amount'] ) : 0;
-        $level->trial_limit = isset( $params['trial_limit'] ) ? intval( $params['trial_limit'] ) : 0;
-        $level->expiration_number = isset( $params['expiration_number'] ) ? intval( $params['expiration_number'] ) : 0;
-        $level->expiration_period = isset( $params['expiration_period'] ) ? sanitize_text_field( $params['expiration_period'] ) : '';
-        $level->allow_signups = isset( $params['allow_signups'] ) ? intval( $params['allow_signups'] ) : 1;
+		// Set optional fields.
+		if ( isset( $params['description'] ) ) {
+			$level->description = sanitize_textarea_field( $params['description'] );
+		}
 
-        // Save level
-        $level->save();
+		if ( isset( $params['confirmation'] ) ) {
+			$level->confirmation = sanitize_textarea_field( $params['confirmation'] );
+		}
 
-        // Assign to level group (if applicable)
-        if ( $level->id ) {
-            $this->assign_level_group( $level->id, $params );
-        }
+		$level->initial_payment   = isset( $params['initial_payment'] ) ? floatval( $params['initial_payment'] ) : 0;
+		$level->billing_amount    = isset( $params['billing_amount'] ) ? floatval( $params['billing_amount'] ) : 0;
+		$level->cycle_number      = isset( $params['cycle_number'] ) ? intval( $params['cycle_number'] ) : 0;
+		$level->cycle_period      = isset( $params['cycle_period'] ) ? sanitize_text_field( $params['cycle_period'] ) : '';
+		$level->billing_limit     = isset( $params['billing_limit'] ) ? intval( $params['billing_limit'] ) : 0;
+		$level->trial_amount      = isset( $params['trial_amount'] ) ? floatval( $params['trial_amount'] ) : 0;
+		$level->trial_limit       = isset( $params['trial_limit'] ) ? intval( $params['trial_limit'] ) : 0;
+		$level->expiration_number = isset( $params['expiration_number'] ) ? intval( $params['expiration_number'] ) : 0;
+		$level->expiration_period = isset( $params['expiration_period'] ) ? sanitize_text_field( $params['expiration_period'] ) : '';
+		$level->allow_signups     = isset( $params['allow_signups'] ) ? intval( $params['allow_signups'] ) : 1;
 
-        // Return level ID
-        return $level->id ? intval( $level->id ) : null;
-    }
+		// Save level.
+		$level->save();
 
-    /**
-     * Assign level to a group based on name prefix
-     */
-    private function assign_level_group( $level_id, $params ) {
-        global $wpdb;
+		// Assign to level group (if applicable).
+		if ( $level->id ) {
+			$this->assign_level_group( $level->id, $params );
+		}
 
-        // Check if level groups table exists (PMPro 3.0+)
-        $table_name = $wpdb->prefix . 'pmpro_membership_levels_groups';
-        if ( $wpdb->get_var( "SHOW TABLES LIKE '{$table_name}'" ) !== $table_name ) {
-            return; // Table doesn't exist, skip
-        }
+		// Return level ID.
+		return $level->id ? intval( $level->id ) : null;
+	}
 
-        // Extract group name from level name
-        $group_name = $this->extract_group_name( $params['name'] );
-        
-        // Allow filtering of group name
-        $group_name = apply_filters( 'pmpro_magic_levels_group_name', $group_name, $params );
-        
-        // Skip if no group name or disabled
-        if ( empty( $group_name ) ) {
-            return;
-        }
+	/**
+	 * Assign level to a group based on name prefix.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int   $level_id Level ID.
+	 * @param array $params   Level parameters.
+	 * @return void
+	 */
+	private function assign_level_group( $level_id, $params ) {
+		global $wpdb;
 
-        // Find or create group
-        $group_id = $this->find_or_create_group( $group_name );
-        
-        if ( ! $group_id ) {
-            return;
-        }
+		// Check if level groups table exists (PMPro 3.0+).
+		$table_name = $wpdb->prefix . 'pmpro_membership_levels_groups';
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
+			return; // Table doesn't exist, skip.
+		}
 
-        // Assign level to group
-        $wpdb->insert(
-            $table_name,
-            [
-                'group' => $group_id,
-                'level' => $level_id
-            ],
-            [ '%d', '%d' ]
-        );
-    }
+		// Extract group name from level name.
+		$group_name = $this->extract_group_name( $params['name'] );
 
-    /**
-     * Extract group name from level name
-     */
-    private function extract_group_name( $level_name ) {
-        // Look for " - " separator
-        if ( strpos( $level_name, ' - ' ) !== false ) {
-            $parts = explode( ' - ', $level_name, 2 );
-            return trim( $parts[0] );
-        }
-        
-        return ''; // No group
-    }
+		// Allow filtering of group name.
+		$group_name = apply_filters( 'pmpro_magic_levels_group_name', $group_name, $params );
 
-    /**
-     * Find or create a level group
-     */
-    private function find_or_create_group( $group_name ) {
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'pmpro_membership_levels_groups';
+		// Skip if no group name or disabled.
+		if ( empty( $group_name ) ) {
+			return;
+		}
 
-        // Try to find existing group
-        $group_id = $wpdb->get_var( $wpdb->prepare(
-            "SELECT id FROM {$table_name} WHERE name = %s LIMIT 1",
-            $group_name
-        ) );
+		// Find or create group.
+		$group_id = $this->find_or_create_group( $group_name );
 
-        if ( $group_id ) {
-            return intval( $group_id );
-        }
+		if ( ! $group_id ) {
+			return;
+		}
 
-        // Create new group
-        $wpdb->insert(
-            $table_name,
-            [ 'name' => $group_name ],
-            [ '%s' ]
-        );
+		// Assign level to group.
+		$wpdb->insert(
+			$table_name,
+			array(
+				'group' => $group_id,
+				'level' => $level_id,
+			),
+			array( '%d', '%d' )
+		);
+	}
 
-        return $wpdb->insert_id ? intval( $wpdb->insert_id ) : null;
-    }
+	/**
+	 * Extract group name from level name.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $level_name Level name.
+	 * @return string Group name or empty string.
+	 */
+	private function extract_group_name( $level_name ) {
+		// Look for " - " separator.
+		if ( false !== strpos( $level_name, ' - ' ) ) {
+			$parts = explode( ' - ', $level_name, 2 );
+			return trim( $parts[0] );
+		}
+
+		return ''; // No group.
+	}
+
+	/**
+	 * Find or create a level group.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $group_name Group name.
+	 * @return int|null Group ID if found/created, null otherwise.
+	 */
+	private function find_or_create_group( $group_name ) {
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'pmpro_membership_levels_groups';
+
+		// Try to find existing group.
+		$group_id = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM {$table_name} WHERE name = %s LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$group_name
+			)
+		);
+
+		if ( $group_id ) {
+			return intval( $group_id );
+		}
+
+		// Create new group.
+		$wpdb->insert(
+			$table_name,
+			array( 'name' => $group_name ),
+			array( '%s' )
+		);
+
+		return $wpdb->insert_id ? intval( $wpdb->insert_id ) : null;
+	}
 }
