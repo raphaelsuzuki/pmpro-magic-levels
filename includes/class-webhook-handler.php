@@ -111,6 +111,25 @@ class PMPRO_Magic_Levels_Webhook_Handler {
 		// Process level.
 		$result = pmpro_magic_levels_process( $params );
 
+		// Add debug info to error responses.
+		if ( ! $result['success'] ) {
+			$result['debug'] = array(
+				'received_params' => $params,
+				'timestamp'       => current_time( 'mysql' ),
+			);
+		}
+
+		// Add redirect_url to successful responses.
+		if ( $result['success'] && isset( $result['level_id'] ) ) {
+			$checkout_url = apply_filters(
+				'pmpro_magic_levels_checkout_url',
+				home_url( '/checkout/' ),
+				$result['level_id'],
+				$params
+			);
+			$result['redirect_url'] = add_query_arg( 'pmpro_level', $result['level_id'], $checkout_url );
+		}
+
 		// Return response.
 		if ( $result['success'] ) {
 			return new WP_REST_Response( $result, 200 );

@@ -215,10 +215,16 @@ class PMPRO_Magic_Levels_Level_Matcher {
 	private function assign_level_group( $level_id, $params ) {
 		global $wpdb;
 
-		// Check if level groups table exists (PMPro 3.0+).
-		$table_name = $wpdb->prefix . 'pmpro_membership_levels_groups';
-		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) !== $table_name ) {
-			return; // Table doesn't exist, skip.
+		// Check if level groups tables exist (PMPro 3.0+).
+		$groups_table     = $wpdb->prefix . 'pmpro_groups';
+		$groups_rel_table = $wpdb->prefix . 'pmpro_membership_levels_groups';
+
+		// Check if tables exist.
+		$groups_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $groups_table ) ) === $groups_table;
+		$rel_exists    = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $groups_rel_table ) ) === $groups_rel_table;
+
+		if ( ! $groups_exists || ! $rel_exists ) {
+			return; // Tables don't exist, skip.
 		}
 
 		// Extract group name from level name.
@@ -239,9 +245,22 @@ class PMPRO_Magic_Levels_Level_Matcher {
 			return;
 		}
 
+		// Check if relationship already exists.
+		$exists = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$groups_rel_table} WHERE `group` = %d AND `level` = %d",
+				$group_id,
+				$level_id
+			)
+		);
+
+		if ( $exists ) {
+			return; // Already assigned.
+		}
+
 		// Assign level to group.
 		$wpdb->insert(
-			$table_name,
+			$groups_rel_table,
 			array(
 				'group' => $group_id,
 				'level' => $level_id,
@@ -278,7 +297,7 @@ class PMPRO_Magic_Levels_Level_Matcher {
 	 */
 	private function find_or_create_group( $group_name ) {
 		global $wpdb;
-		$table_name = $wpdb->prefix . 'pmpro_membership_levels_groups';
+		$table_name = $wpdb->prefix . 'pmpro_groups';
 
 		// Try to find existing group.
 		$group_id = $wpdb->get_var(

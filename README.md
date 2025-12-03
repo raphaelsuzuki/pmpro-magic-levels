@@ -9,7 +9,10 @@ PMPro Magic Levels allows you to create custom membership levels on-the-fly base
 1. **Validate** the submission against configurable rules
 2. **Search** for an existing level with matching parameters
 3. **Create** a new level if no match exists
-4. **Redirect** the user to PMPro checkout for that level
+4. **Assign** the level to a group (required for PMPro 3.x)
+5. **Redirect** the user to PMPro checkout for that level
+
+**Important:** Level names must use the format `"GroupName - LevelName"` (e.g., "Basic - Gold"). This is required for PMPro's group-based level management.
 
 Perfect for:
 - Variable pricing forms where users choose their own price
@@ -37,7 +40,7 @@ Perfect for:
 ```php
 // In your form handler or custom code
 $result = pmpro_magic_levels_process([
-    'name' => 'Premium Membership',
+    'name' => 'Premium - Gold',  // Format: "GroupName - LevelName"
     'billing_amount' => 29.99,
     'cycle_period' => 'Month',
     'cycle_number' => 1
@@ -56,7 +59,7 @@ fetch('/wp-json/pmpro-magic-levels/v1/process', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-        name: 'Premium Membership',
+        name: 'Premium - Gold',  // Format: "GroupName - LevelName"
         billing_amount: 29.99,
         cycle_period: 'Month',
         cycle_number: 1
@@ -357,7 +360,7 @@ fetch('/wp-json/pmpro-magic-levels/v1/process', {
 ## Level Parameters
 
 ### Required
-- `name` (string) - Level name
+- `name` (string) - Level name in format "GroupName - LevelName" (e.g., "Basic - Gold")
 
 ### Optional
 - `description` (string) - Level description
@@ -399,6 +402,7 @@ fetch('/wp-json/pmpro-magic-levels/v1/process', {
 ## Error Codes
 
 - `missing_required_field` - Missing name
+- `missing_group_separator` - Name doesn't include " - " separator for group
 - `invalid_price_increment` - Price not multiple of increment
 - `price_below_minimum` - Price below minimum
 - `price_above_maximum` - Price above maximum
@@ -524,8 +528,19 @@ add_filter('pmpro_magic_levels_cache_method', fn() => 'transient');
 
 ## Documentation
 
-- **[FILTERS.md](FILTERS.md)** - Complete filter reference (all 20+ filters)
-- **[examples/](examples/)** - Form integration examples
+📚 **[Complete Documentation](docs/)** - Full documentation in the `/docs` folder
+
+Quick links:
+- **[Getting Started](docs/getting-started.md)** - Installation and quick start
+- **[WSForm Integration](docs/integrations/wsform.md)** - Complete WSForm guide
+- **[Configuration](docs/configuration.md)** - All filter options
+- **[API Reference](docs/api-reference.md)** - REST API documentation
+- **[cURL Examples](docs/curl-examples.md)** - Test examples
+- **[Troubleshooting](docs/troubleshooting.md)** - Common issues
+
+Additional resources:
+- **[FILTERS.md](FILTERS.md)** - Complete filter reference
+- **[examples/](examples/)** - Code examples for various form plugins
 
 ## Support
 

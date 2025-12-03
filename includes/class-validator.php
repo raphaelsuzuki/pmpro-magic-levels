@@ -26,7 +26,6 @@ class PMPRO_Magic_Levels_Validator {
 	 */
 	private function get_defaults() {
 		return array(
-			'price_increment'        => apply_filters( 'pmpro_magic_levels_price_increment', 1.00 ),
 			'min_price'              => apply_filters( 'pmpro_magic_levels_min_price', 0.00 ),
 			'max_price'              => apply_filters( 'pmpro_magic_levels_max_price', 9999.99 ),
 			'allowed_periods'        => apply_filters( 'pmpro_magic_levels_allowed_periods', array( 'Day', 'Week', 'Month', 'Year' ) ),
@@ -58,6 +57,11 @@ class PMPRO_Magic_Levels_Validator {
 			return $this->error( 'Name is required', 'missing_required_field' );
 		}
 
+		// Check if name contains group separator (required for PMPro groups).
+		if ( false === strpos( $data['name'], ' - ' ) ) {
+			return $this->error( 'Name must include a group using format "GroupName - LevelName"', 'missing_group_separator' );
+		}
+
 		// Validate name length.
 		$name_length = strlen( $data['name'] );
 		if ( $name_length < $rules['min_name_length'] ) {
@@ -81,16 +85,20 @@ class PMPRO_Magic_Levels_Validator {
 
 		// Validate prices.
 		if ( isset( $data['billing_amount'] ) ) {
+			// Parse formatted currency strings (e.g., "¥219,450" or "$1,234.56").
+			if ( is_string( $data['billing_amount'] ) ) {
+				$data['billing_amount'] = preg_replace( '/[^0-9.]/', '', $data['billing_amount'] );
+			}
 			$billing_amount = floatval( $data['billing_amount'] );
+
+			// Check if it's a valid number (not negative).
+			if ( $billing_amount < 0 ) {
+				return $this->error( 'Price cannot be negative', 'invalid_price' );
+			}
 
 			// Check free levels.
 			if ( 0 === $billing_amount && ! $rules['allow_free_levels'] ) {
 				return $this->error( 'Free levels are not allowed', 'free_levels_disabled' );
-			}
-
-			// Check price increment.
-			if ( $rules['price_increment'] > 0 && 0 !== fmod( $billing_amount, $rules['price_increment'] ) ) {
-				return $this->error( "Price must be a multiple of \${$rules['price_increment']}", 'invalid_price_increment' );
 			}
 
 			// Check min/max price.

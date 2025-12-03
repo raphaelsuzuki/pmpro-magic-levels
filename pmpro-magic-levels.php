@@ -120,13 +120,9 @@ function pmpro_magic_levels_process( $level_data ) {
 		return $result;
 	}
 
-	// Build checkout URL.
-	$checkout_url = pmpro_url( 'checkout', '?level=' . $result['level_id'] );
-
 	return array(
 		'success'       => true,
 		'level_id'      => $result['level_id'],
-		'redirect_url'  => $checkout_url,
 		'level_created' => $result['level_created'],
 		'cached'        => isset( $result['cached'] ) ? $result['cached'] : false,
 		'message'       => $result['level_created'] ? 'New level created' : 'Existing level found',

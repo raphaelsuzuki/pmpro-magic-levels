@@ -198,16 +198,53 @@ add_action( 'wsf_submit_post_complete', 'pmpro_magic_levels_wsform_variables_han
  *
  * 5. In the "Body" field, use this JSON structure:
  *
+ *    IMPORTANT: WSForm has field type settings for webhook body fields.
+ *    When you add a field to the webhook body, you can set its type:
+ *    - Source (default) - Uses the webhook settings type
+ *    - String - Sends as text
+ *    - Integer - Sends as whole number
+ *    - Float - Sends as decimal number
+ *    - Boolean - Sends as true/false
+ *
+ *    CORRECT FIELD TYPES:
  *    {
- *      "name": "#field(1)",
- *      "billing_amount": "#field(2)",
- *      "cycle_period": "#field(3)",
- *      "cycle_number": 1
+ *      "name": "#field(1)",              ← Type: String or Source
+ *      "billing_amount": "#field(2)",    ← Type: Float (IMPORTANT!)
+ *      "cycle_period": "#field(3)",      ← Type: String or Source
+ *      "cycle_number": 1                 ← Type: Integer or Source
  *    }
+ *
+ *    HOW TO SET FIELD TYPES IN WSFORM:
+ *    a) Click on the field in the webhook body editor
+ *    b) Look for "Type" dropdown on the right side
+ *    c) Set the appropriate type:
+ *       - name → String
+ *       - billing_amount → Float
+ *       - cycle_period → String
+ *       - cycle_number → Integer
+ *       - initial_payment → Float
+ *       - trial_amount → Float
+ *       - trial_limit → Integer
+ *       - billing_limit → Integer
+ *       - expiration_number → Integer
  *
  *    Replace field(1), field(2), field(3) with your actual field IDs.
  *
- * 6. Optional - Add authentication:
+ * 6. ALTERNATIVE: Use Source type with proper JSON syntax
+ *
+ *    If you set all fields to "Source" type, you need to write proper JSON:
+ *
+ *    {
+ *      "name": "#field(1)",
+ *      "billing_amount": #field(2),      ← No quotes for numbers
+ *      "cycle_period": "#field(3)",
+ *      "cycle_number": 1                 ← No quotes for numbers
+ *    }
+ *
+ *    Notice: billing_amount has NO quotes around #field(2)
+ *    This tells WSForm to send it as a number, not a string.
+ *
+ * 7. Optional - Add authentication:
  *
  *    {
  *      "auth_key": "your-secret-key-here",
@@ -217,6 +254,13 @@ add_action( 'wsf_submit_post_complete', 'pmpro_magic_levels_wsform_variables_han
  *      "cycle_number": 1
  *    }
  *
+ *    Set field types:
+ *    - auth_key → String
+ *    - name → String
+ *    - billing_amount → Float
+ *    - cycle_period → String
+ *    - cycle_number → Integer
+ *
  *    Then enable authentication in your functions.php:
  *
  *    add_filter( 'pmpro_magic_levels_webhook_require_auth', '__return_true' );
@@ -224,7 +268,7 @@ add_action( 'wsf_submit_post_complete', 'pmpro_magic_levels_wsform_variables_han
  *        return 'your-secret-key-here';
  *    } );
  *
- * 7. To redirect after success, add a "Redirect" action after the webhook
+ * 8. To redirect after success, add a "Redirect" action after the webhook
  *    and use the response variable: #webhook_response(redirect_url)
  */
 
@@ -863,27 +907,123 @@ function pmpro_magic_levels_wsform_debug_logger( $submit ) {
 /**
  * COMMON ISSUES AND SOLUTIONS:
  *
- * 1. "Field values are empty"
+ * 1. "Webhook error - HTTP status code: 400 (Bad Request)"
+ *    This means validation failed. Common causes:
+ *
+ *    a) Missing required field (name):
+ *       - Check that "name" field is included in webhook body
+ *       - Verify field ID is correct: "name": "#field(1)"
+ *       - Make sure field is not empty when submitting
+ *
+ *    b) Invalid price format:
+ *       - Price must be a number, not a string
+ *       - Use: "billing_amount": #field(2) (no quotes around #field)
+ *       - NOT: "billing_amount": "#field(2)" (this sends it as string)
+ *
+ *    c) Price validation rules:
+ *       - Check minimum price requirement (default: $0)
+ *       - Check maximum price requirement (default: $9999.99)
+ *       - Check price increment requirement (default: $1.00)
+ *       - Verify price is not below minimum or above maximum
+ *
+ *    d) Invalid cycle_period:
+ *       - Must be one of: "Day", "Week", "Month", "Year"
+ *       - Check capitalization (case-sensitive)
+ *       - Default allowed: ['Day', 'Week', 'Month', 'Year']
+ *
+ *    e) Invalid cycle_number:
+ *       - Must be an integer
+ *       - Default allowed: [1, 2, 3, 6, 12]
+ *       - Use: "cycle_number": 1 (no quotes)
+ *
+ *    f) Name validation:
+ *       - Check minimum name length (default: 1 character)
+ *       - Check maximum name length (default: 255 characters)
+ *       - Check for blacklisted words
+ *       - Check name pattern if regex is set
+ *
+ *    g) Rate limiting:
+ *       - Too many requests from same IP
+ *       - Default: 100 requests per hour
+ *       - Wait or increase limit via filter
+ *
+ *    h) Daily limit exceeded:
+ *       - Too many levels created today
+ *       - Default: 1000 levels per day
+ *       - Wait until tomorrow or increase limit
+ *
+ *    DEBUGGING STEPS:
+ *
+ *    Step 1: Check webhook response in WSForm
+ *    - Go to WSForm > Submissions
+ *    - Click on the failed submission
+ *    - Look at the webhook response
+ *    - It should show the exact error message
+ *
+ *    Step 2: Test with minimal data
+ *    Use this minimal webhook body:
+ *    {
+ *      "name": "Test Level",
+ *      "billing_amount": 29.99,
+ *      "cycle_period": "Month",
+ *      "cycle_number": 1
+ *    }
+ *
+ *    Step 3: Check field types in webhook body
+ *    CORRECT:
+ *    {
+ *      "name": "#field(1)",              ← String (with quotes)
+ *      "billing_amount": #field(2),      ← Number (no quotes)
+ *      "cycle_number": 1,                ← Number (no quotes)
+ *      "cycle_period": "#field(3)"       ← String (with quotes)
+ *    }
+ *
+ *    INCORRECT:
+ *    {
+ *      "name": "#field(1)",
+ *      "billing_amount": "#field(2)",    ← Wrong! This sends string "29.99"
+ *      "cycle_number": "1",              ← Wrong! This sends string "1"
+ *      "cycle_period": "#field(3)"
+ *    }
+ *
+ *    Step 4: Temporarily disable validation rules
+ *    Add to functions.php to test:
+ *    add_filter( 'pmpro_magic_levels_min_price', function() { return 0.00; } );
+ *    add_filter( 'pmpro_magic_levels_max_price', function() { return 99999.99; } );
+ *    add_filter( 'pmpro_magic_levels_price_increment', function() { return 0.01; } );
+ *    add_filter( 'pmpro_magic_levels_allowed_periods', function() {
+ *        return array( 'Day', 'Week', 'Month', 'Year' );
+ *    } );
+ *
+ *    Step 5: Enable WordPress debug logging
+ *    Add to wp-config.php:
+ *    define( 'WP_DEBUG', true );
+ *    define( 'WP_DEBUG_LOG', true );
+ *    define( 'WP_DEBUG_DISPLAY', false );
+ *
+ *    Then check: wp-content/debug.log
+ *
+ * 2. "Field values are empty"
  *    - Check your field IDs in WSForm
  *    - Use WS_Form_Common::get_object_meta_value() to get values
  *    - Enable debug logging to see actual field structure
  *
- * 2. "Webhook not firing"
+ * 3. "Webhook not firing"
  *    - Verify webhook URL is correct
  *    - Check if PMPro Magic Levels plugin is active
  *    - Test webhook URL directly with Postman or curl
  *
- * 3. "Redirect not working"
+ * 4. "Redirect not working"
  *    - Make sure you're using #webhook_response(redirect_url)
  *    - Check if webhook returns success: true
  *    - Verify redirect action is after webhook action
  *
- * 4. "Authentication errors"
+ * 5. "Authentication errors"
  *    - Verify auth_key matches in both webhook and filter
  *    - Check if authentication is enabled via filter
  *    - Test without authentication first
  *
- * 5. "Validation errors"
+ * 6. "Validation errors"
  *    - Check PMPro Magic Levels validation rules
  *    - Verify price meets minimum/maximum requirements
  *    - Check if cycle_period is in allowed list
@@ -974,4 +1114,474 @@ function pmpro_magic_levels_wsform_debug_logger( $submit ) {
  * WSForm: Just name field
  * Webhook: { "name": "#field(1)" }
  * PHP: Everything else hardcoded
+ */
+
+
+// ============================================
+// UNDERSTANDING WSFORM FIELD TYPES IN WEBHOOK
+// ============================================
+
+/**
+ * WSForm has a "Type" setting for each field in the webhook body.
+ * This is CRITICAL for proper data formatting.
+ *
+ * AVAILABLE TYPES:
+ *
+ * 1. SOURCE (Default)
+ *    - Uses the webhook's default type handling
+ *    - Requires proper JSON syntax (quotes for strings, no quotes for numbers)
+ *    - Example: "billing_amount": #field(2)  ← No quotes around #field(2)
+ *    - IMPORTANT: If using Source type, you MUST write JSON correctly
+ *    - This is the most error-prone option for beginners
+ *
+ * 2. STRING
+ *    - Sends value as text
+ *    - Use for: name, cycle_period, description, confirmation
+ *    - Example: "name": "#field(1)"
+ *
+ * 3. INTEGER
+ *    - Sends value as whole number
+ *    - Use for: cycle_number, trial_limit, billing_limit, expiration_number
+ *    - Example: "cycle_number": "#field(3)"  ← Will be sent as integer
+ *
+ * 4. FLOAT
+ *    - Sends value as decimal number
+ *    - Use for: billing_amount, initial_payment, trial_amount
+ *    - Example: "billing_amount": "#field(2)"  ← Will be sent as float
+ *
+ * 5. BOOLEAN
+ *    - Sends value as true/false
+ *    - Use for: allow_signups (if using checkbox)
+ *    - Example: "allow_signups": "#field(5)"  ← Will be sent as boolean
+ *
+ * HOW TO SET FIELD TYPES IN WSFORM:
+ *
+ * Step 1: In webhook action, go to "Body" tab
+ * Step 2: Click on any field value in the JSON (e.g., click on "#field(2)")
+ * Step 3: Look at the right sidebar - you'll see "Type" dropdown
+ * Step 4: Select the appropriate type from the dropdown
+ *
+ * RECOMMENDED FIELD TYPE MAPPING:
+ *
+ * Field Name              | WSForm Type | Example Value
+ * ----------------------- | ----------- | -------------
+ * name                    | String      | "Premium Plan"
+ * description             | String      | "Full access"
+ * confirmation            | String      | "Welcome!"
+ * billing_amount          | Float       | 29.99
+ * initial_payment         | Float       | 0.00
+ * trial_amount            | Float       | 1.00
+ * cycle_number            | Integer     | 1
+ * trial_limit             | Integer     | 1
+ * billing_limit           | Integer     | 12
+ * expiration_number       | Integer     | 30
+ * cycle_period            | String      | "Month"
+ * expiration_period       | String      | "Day"
+ * allow_signups           | Integer     | 1
+ *
+ * EXAMPLE WEBHOOK BODY WITH TYPES:
+ *
+ * {
+ *   "name": "#field(1)",              ← Set Type: String
+ *   "billing_amount": "#field(2)",    ← Set Type: Float
+ *   "cycle_period": "#field(3)",      ← Set Type: String
+ *   "cycle_number": 1,                ← Set Type: Integer (or Source)
+ *   "description": "#field(4)"        ← Set Type: String
+ * }
+ *
+ * COMMON MISTAKE:
+ *
+ * ❌ WRONG: Setting billing_amount type to "String"
+ * This sends: "billing_amount": "29.99"  (string)
+ * Result: Validation error or incorrect processing
+ *
+ * ✅ CORRECT: Setting billing_amount type to "Float"
+ * This sends: "billing_amount": 29.99  (number)
+ * Result: Works perfectly!
+ *
+ * WHY THIS MATTERS:
+ *
+ * The PMPro Magic Levels API expects numbers to be actual numbers,
+ * not strings. If you send "29.99" (string) instead of 29.99 (number),
+ * PHP's floatval() will convert it, but it's better to send the
+ * correct type from WSForm.
+ *
+ * TESTING YOUR FIELD TYPES:
+ *
+ * 1. Submit your form
+ * 2. Go to WSForm > Submissions
+ * 3. Click on the submission
+ * 4. Look at the webhook request body
+ * 5. Verify numbers don't have quotes around them
+ *
+ * Correct:  "billing_amount": 29.99
+ * Wrong:    "billing_amount": "29.99"
+ *
+ * IF YOU'RE USING "SOURCE" TYPE AND GETTING 400 ERROR:
+ *
+ * The problem is likely your JSON syntax. With "Source" type, WSForm
+ * interprets the JSON literally. This means:
+ *
+ * ❌ WRONG (Source type with quotes):
+ * {
+ *   "name": "#field(1)",
+ *   "billing_amount": "#field(2)",    ← Has quotes, sends as string
+ *   "cycle_number": "1"               ← Has quotes, sends as string
+ * }
+ *
+ * ✅ CORRECT (Source type without quotes for numbers):
+ * {
+ *   "name": "#field(1)",
+ *   "billing_amount": #field(2),      ← No quotes, sends as number
+ *   "cycle_number": 1                 ← No quotes, sends as number
+ * }
+ *
+ * EASIEST SOLUTION - Use Explicit Types Instead of Source:
+ *
+ * Instead of using "Source" type and worrying about JSON syntax,
+ * just set explicit types for each field:
+ *
+ * 1. Click on "#field(1)" → Set Type: String
+ * 2. Click on "#field(2)" → Set Type: Float
+ * 3. Click on "#field(3)" → Set Type: String
+ * 4. Click on "1" → Set Type: Integer
+ *
+ * Now you can write it with quotes everywhere:
+ * {
+ *   "name": "#field(1)",
+ *   "billing_amount": "#field(2)",
+ *   "cycle_period": "#field(3)",
+ *   "cycle_number": 1
+ * }
+ *
+ * WSForm will automatically convert them to the correct types!
+ */
+
+// ============================================
+// TROUBLESHOOTING "SOURCE" TYPE WITH 400 ERROR
+// ============================================
+
+/**
+ * If you're using "Source" type (default) and getting 400 error:
+ *
+ * PROBLEM:
+ * When all fields are set to "Source" type, WSForm reads your JSON
+ * literally. If you write:
+ *
+ * {
+ *   "billing_amount": "#field(2)"
+ * }
+ *
+ * WSForm sends: "billing_amount": "29.99" (as string)
+ * Because you put quotes around #field(2)
+ *
+ * SOLUTION 1: Remove quotes from number fields
+ *
+ * {
+ *   "name": "#field(1)",
+ *   "billing_amount": #field(2),        ← No quotes!
+ *   "cycle_period": "#field(3)",
+ *   "cycle_number": 1                   ← No quotes!
+ * }
+ *
+ * SOLUTION 2: Change from "Source" to explicit types (RECOMMENDED)
+ *
+ * Keep the quotes, but change field types:
+ * 1. Click on "#field(2)" in webhook body
+ * 2. Change Type from "Source" to "Float"
+ * 3. Click on "1"
+ * 4. Change Type from "Source" to "Integer"
+ *
+ * Now this works:
+ * {
+ *   "name": "#field(1)",
+ *   "billing_amount": "#field(2)",      ← Quotes OK, type is Float
+ *   "cycle_period": "#field(3)",
+ *   "cycle_number": 1                   ← Type is Integer
+ * }
+ *
+ * WHY SOLUTION 2 IS BETTER:
+ * - Less confusing (quotes everywhere)
+ * - Easier to read and maintain
+ * - Less prone to syntax errors
+ * - WSForm handles the conversion for you
+ */
+
+// ============================================
+// QUICK FIX FOR 400 ERROR
+// ============================================
+
+/**
+ * If you're getting a 400 error, try this minimal webhook body first:
+ *
+ * STEP 1: Use this exact webhook body in WSForm:
+ * {
+ *   "name": "Test Membership",
+ *   "billing_amount": 29.99,
+ *   "cycle_period": "Month",
+ *   "cycle_number": 1
+ * }
+ *
+ * If this works, the issue is with your field variables.
+ *
+ * STEP 2: Add one field at a time:
+ * {
+ *   "name": "#field(1)",
+ *   "billing_amount": 29.99,
+ *   "cycle_period": "Month",
+ *   "cycle_number": 1
+ * }
+ *
+ * STEP 3: Add the price field with correct type:
+ * {
+ *   "name": "#field(1)",
+ *   "billing_amount": "#field(2)",
+ *   "cycle_period": "Month",
+ *   "cycle_number": 1
+ * }
+ *
+ * IMPORTANT: Set field type for billing_amount to "Float" in WSForm!
+ * Click on the billing_amount field in webhook body editor
+ * Set Type dropdown to "Float" (not "String" or "Source")
+ *
+ * STEP 4: Check the webhook response in WSForm submissions
+ * - Go to WSForm > Submissions
+ * - Click on your submission
+ * - Look for the webhook action
+ * - Click on "View" or expand the webhook action
+ * - Look at the "Response" section
+ * - You should see the actual error message like:
+ *   "error": "Name is required"
+ *   "error": "Price must be at least $10.00"
+ *   "error": "Invalid cycle period"
+ * - This tells you EXACTLY what's wrong
+ *
+ * IMPORTANT WSFORM SETTING:
+ * In the webhook action settings, there's a checkbox:
+ * "Process Response" - This should be CHECKED
+ * 
+ * If checked: WSForm will process response and show errors
+ * If unchecked: WSForm ignores response (you won't see errors)
+ * 
+ * Make sure this is CHECKED so you can see the error details!
+ *
+ * COMMON ERROR MESSAGES AND FIXES:
+ *
+ * Error: "Name is required"
+ * Fix: Add "name" field to webhook body
+ *
+ * Error: "Price must be at least $10.00"
+ * Fix: Increase price or change filter:
+ * add_filter( 'pmpro_magic_levels_min_price', function() { return 0.00; } );
+ *
+ * Error: "Price must be a multiple of $5.00" or "Price must be a multiple of $1"
+ * Fix: Use price that's multiple of the increment, or change filter:
+ * add_filter( 'pmpro_magic_levels_price_increment', function() { return 0.01; } );
+ * 
+ * Note: If you see "multiple of $1", you can only use whole dollar amounts
+ * like 29, 30, 50 (not 29.99, 30.50, etc.) unless you change the filter.
+ *
+ * Error: "Invalid cycle period"
+ * Fix: Use "Month" not "month" (case-sensitive)
+ * Valid values: "Day", "Week", "Month", "Year"
+ *
+ * Error: "Invalid cycle number"
+ * Fix: Use 1, 2, 3, 6, or 12 (default allowed values)
+ * Or add filter to allow more:
+ * add_filter( 'pmpro_magic_levels_allowed_cycle_numbers', function() {
+ *     return array( 1, 2, 3, 6, 12, 24 );
+ * } );
+ */
+
+
+// ============================================
+// HOW TO SEE THE ACTUAL ERROR MESSAGE
+// ============================================
+
+/**
+ * When you get "HTTP status code: 400 (Bad Request)", this is just
+ * the HTTP status. The ACTUAL error message is in the response body.
+ *
+ * TO SEE THE REAL ERROR:
+ *
+ * 1. Go to WSForm > Submissions
+ * 2. Find your failed submission
+ * 3. Click on it to open details
+ * 4. Scroll down to "Actions" section
+ * 5. Find the "Webhook" action
+ * 6. Click "View" or expand it
+ * 7. Look for "Response" section
+ * 8. You should see JSON like:
+ *
+ *    {
+ *      "success": false,
+ *      "error": "Price must be at least $10.00",
+ *      "code": "price_below_minimum"
+ *    }
+ *
+ * The "error" field tells you EXACTLY what's wrong!
+ *
+ * COMMON ERROR MESSAGES AND SOLUTIONS:
+ *
+ * Error: "Name is required"
+ * → Add "name" field to webhook body
+ *
+ * Error: "Price must be at least $10.00"
+ * → Your price is too low. Either increase it or add this filter:
+ *   add_filter( 'pmpro_magic_levels_min_price', function() { return 0.00; } );
+ *
+ * Error: "Price must be a multiple of $5.00"
+ * → Your price must be 5, 10, 15, 20, etc. Or add this filter:
+ *   add_filter( 'pmpro_magic_levels_price_increment', function() { return 1.00; } );
+ *
+ * Error: "Invalid cycle period"
+ * → Must be exactly: "Day", "Week", "Month", or "Year" (case-sensitive!)
+ *
+ * Error: "Invalid cycle number"
+ * → Must be one of: 1, 2, 3, 6, 12 (default allowed values)
+ *
+ * Error: "Name must be at least 5 characters"
+ * → Your name is too short. Make it longer or add this filter:
+ *   add_filter( 'pmpro_magic_levels_min_name_length', function() { return 1; } );
+ *
+ * Error: "Rate limit exceeded"
+ * → You've submitted too many times. Wait an hour or add this filter:
+ *   add_filter( 'pmpro_magic_levels_rate_limit', function() {
+ *       return array( 'max_requests' => 1000, 'time_window' => 3600, 'by' => 'ip' );
+ *   } );
+ *
+ * IF YOU CAN'T SEE THE RESPONSE:
+ *
+ * Make sure "Process Response" is checked in webhook settings:
+ * 1. Edit your form in WSForm
+ * 2. Go to Actions tab
+ * 3. Click on your Webhook action
+ * 4. Look for "Process Response" checkbox
+ * 5. Make sure it's CHECKED
+ * 6. Save and test again
+ *
+ * ALTERNATIVE: Test with curl or Postman
+ *
+ * If you still can't see the error, test the webhook directly:
+ *
+ * curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
+ *   -H "Content-Type: application/json" \
+ *   -d '{
+ *     "name": "Test Level",
+ *     "billing_amount": 29.99,
+ *     "cycle_period": "Month",
+ *     "cycle_number": 1
+ *   }'
+ *
+ * This will show you the exact response from the API.
+ */
+
+// ============================================
+// VISUAL COMPARISON: SOURCE VS EXPLICIT TYPES
+// ============================================
+
+/**
+ * SCENARIO: You have a form with these fields:
+ * - Field 1: Text input for "Name"
+ * - Field 2: Number input for "Price" (value: 29.99)
+ * - Field 3: Select for "Period" (value: "Month")
+ *
+ * ========================================
+ * OPTION A: Using "Source" Type (Default)
+ * ========================================
+ *
+ * Webhook Body:
+ * {
+ *   "name": "#field(1)",
+ *   "billing_amount": #field(2),        ← NO QUOTES!
+ *   "cycle_period": "#field(3)",
+ *   "cycle_number": 1
+ * }
+ *
+ * Field Types: All set to "Source"
+ *
+ * What gets sent to API:
+ * {
+ *   "name": "John Doe",
+ *   "billing_amount": 29.99,            ← Number (correct!)
+ *   "cycle_period": "Month",
+ *   "cycle_number": 1
+ * }
+ *
+ * Result: ✅ Works!
+ *
+ * ========================================
+ * OPTION B: Using Explicit Types (RECOMMENDED)
+ * ========================================
+ *
+ * Webhook Body:
+ * {
+ *   "name": "#field(1)",
+ *   "billing_amount": "#field(2)",      ← HAS QUOTES!
+ *   "cycle_period": "#field(3)",
+ *   "cycle_number": 1
+ * }
+ *
+ * Field Types:
+ * - name: String
+ * - billing_amount: Float
+ * - cycle_period: String
+ * - cycle_number: Integer
+ *
+ * What gets sent to API:
+ * {
+ *   "name": "John Doe",
+ *   "billing_amount": 29.99,            ← Number (correct!)
+ *   "cycle_period": "Month",
+ *   "cycle_number": 1
+ * }
+ *
+ * Result: ✅ Works!
+ *
+ * ========================================
+ * OPTION C: Source Type with Quotes (WRONG!)
+ * ========================================
+ *
+ * Webhook Body:
+ * {
+ *   "name": "#field(1)",
+ *   "billing_amount": "#field(2)",      ← HAS QUOTES!
+ *   "cycle_period": "#field(3)",
+ *   "cycle_number": 1
+ * }
+ *
+ * Field Types: All set to "Source"
+ *
+ * What gets sent to API:
+ * {
+ *   "name": "John Doe",
+ *   "billing_amount": "29.99",          ← String (wrong!)
+ *   "cycle_period": "Month",
+ *   "cycle_number": 1
+ * }
+ *
+ * Result: ❌ 400 Error or incorrect processing
+ *
+ * ========================================
+ * SUMMARY
+ * ========================================
+ *
+ * If using "Source" type:
+ * - Remove quotes from number fields
+ * - Harder to maintain
+ * - Easy to make mistakes
+ *
+ * If using explicit types:
+ * - Keep quotes everywhere
+ * - Easier to maintain
+ * - WSForm handles conversion
+ * - RECOMMENDED APPROACH
+ *
+ * QUICK TEST:
+ * After submitting your form, go to WSForm > Submissions
+ * and check the webhook request body. You should see:
+ *
+ * "billing_amount": 29.99     ← Good (no quotes)
+ * NOT
+ * "billing_amount": "29.99"   ← Bad (has quotes)
  */
