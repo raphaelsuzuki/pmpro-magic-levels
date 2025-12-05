@@ -241,12 +241,16 @@ add_filter( 'pmpro_magic_levels_group_name', function( $group_name, $params ) {
 {
   "success": true,
   "level_id": 5,
-  "redirect_url": "https://yoursite.com/checkout/?level=5",
   "level_created": true,
   "cached": false,
   "message": "New level created"
 }
 ```
+
+Build your redirect URL using the `level_id`:
+- Standard checkout: `/checkout/?level=5`
+- Custom checkout: `/custom-checkout/?level=5`
+- With discount: `/checkout/?level=5&discount=SAVE10`
 
 ### Error Response
 
@@ -262,7 +266,7 @@ add_filter( 'pmpro_magic_levels_group_name', function( $group_name, $params ) {
 
 1. **Check created levels:** Go to `wp-admin/admin.php?page=pmpro-membershiplevels`
 2. **Check groups:** If using PMPro 3.0+, groups will be visible in the levels page
-3. **Test redirect:** Copy the `redirect_url` from the response and visit it
+3. **Test checkout:** Build URL `/checkout/?level={level_id}` and visit it
 4. **Check caching:** Run the same request twice - second time should return `"cached": true`
 
 ## WSForm Integration

@@ -77,6 +77,11 @@ function pmpro_magic_levels_init() {
 	add_action( 'pmpro_added_membership_level', 'pmpro_magic_levels_clear_cache' );
 	add_action( 'pmpro_updated_membership_level', 'pmpro_magic_levels_clear_cache' );
 	add_action( 'pmpro_deleted_membership_level', 'pmpro_magic_levels_clear_cache' );
+	// Initialize admin interface.
+	if ( is_admin() ) {
+		require_once plugin_dir_path( __FILE__ ) . 'includes/class-admin-page.php';
+		PMPRO_Magic_Levels_Admin::init();
+	}
 }
 add_action( 'plugins_loaded', 'pmpro_magic_levels_init' );
 

@@ -4,6 +4,9 @@
  *
  * Copy these examples to your theme's functions.php or custom plugin.
  *
+ * NOTE: The API returns level_id, not redirect_url. Build your own redirect:
+ * $checkout_url = pmpro_url('checkout', '?level=' . $result['level_id']);
+ *
  * @package PMPro_Magic_Levels
  * @since 1.0.0
  */
@@ -37,8 +40,9 @@ function pmpro_magic_levels_wpforms_handler( $fields, $entry, $form_data ) {
 	$result = pmpro_magic_levels_process( $level_data );
 
 	if ( $result['success'] ) {
-		// Redirect to checkout.
-		wp_safe_redirect( $result['redirect_url'] );
+		// Build checkout URL and redirect.
+		$checkout_url = pmpro_url( 'checkout', '?level=' . $result['level_id'] );
+		wp_safe_redirect( $checkout_url );
 		exit;
 	} else {
 		// Handle error.
@@ -134,7 +138,8 @@ function pmpro_magic_levels_ninja_forms_handler( $form_data ) {
 	$result = pmpro_magic_levels_process( $level_data );
 
 	if ( $result['success'] ) {
-		$form_data['actions']['redirect'] = $result['redirect_url'];
+		$checkout_url = pmpro_url( 'checkout', '?level=' . $result['level_id'] );
+		$form_data['actions']['redirect'] = $checkout_url;
 	}
 
 	return $form_data;

@@ -61,29 +61,55 @@ class PMPRO_Magic_Levels_Webhook_Handler {
 	 * @return bool|WP_Error True if authorized, WP_Error otherwise.
 	 */
 	public static function check_permissions( $request ) {
-		// Check if authentication is required.
-		$require_auth = apply_filters( 'pmpro_magic_levels_webhook_require_auth', false );
+		// Check if webhook is enabled.
+		$webhook_enabled = get_option( 'pmpro_ml_webhook_enabled', '0' );
 
-		if ( ! $require_auth ) {
-			return true;
-		}
-
-		// Get auth key from request.
-		$params       = $request->get_json_params();
-		$provided_key = isset( $params['auth_key'] ) ? $params['auth_key'] : '';
-
-		// Get configured auth key.
-		$auth_key = apply_filters( 'pmpro_magic_levels_webhook_auth_key', '' );
-
-		if ( empty( $auth_key ) ) {
-			return true; // No key configured, allow access.
-		}
-
-		// Verify key.
-		if ( $provided_key !== $auth_key ) {
+		if ( '1' !== $webhook_enabled ) {
 			return new WP_Error(
-				'invalid_auth_key',
-				'Invalid authentication key',
+				'webhook_disabled',
+				'Webhook Endpoint is disabled. Enable it in PMPro > Magic Levels settings.',
+				array( 'status' => 403 )
+			);
+		}
+
+		// Get stored webhook key.
+		$webhook_key = get_option( 'pmpro_ml_webhook_key' );
+
+		if ( empty( $webhook_key ) ) {
+			return new WP_Error(
+				'no_key_configured',
+				'No security key configured. Generate one in PMPro > Magic Levels settings.',
+				array( 'status' => 500 )
+			);
+		}
+
+		// Get Bearer token from Authorization header.
+		$auth_header = $request->get_header( 'authorization' );
+		
+		if ( empty( $auth_header ) ) {
+			return new WP_Error(
+				'missing_authorization',
+				'Missing Authorization header. Include: Authorization: Bearer YOUR_TOKEN',
+				array( 'status' => 401 )
+			);
+		}
+
+		// Extract token from "Bearer TOKEN" format.
+		if ( ! preg_match( '/Bearer\s+(.*)$/i', $auth_header, $matches ) ) {
+			return new WP_Error(
+				'invalid_authorization_format',
+				'Invalid Authorization header format. Use: Authorization: Bearer YOUR_TOKEN',
+				array( 'status' => 401 )
+			);
+		}
+
+		$provided_token = trim( $matches[1] );
+
+		// Verify token using timing-safe comparison.
+		if ( ! hash_equals( $webhook_key, $provided_token ) ) {
+			return new WP_Error(
+				'invalid_token',
+				'Invalid bearer token',
 				array( 'status' => 403 )
 			);
 		}

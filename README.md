@@ -47,7 +47,8 @@ $result = pmpro_magic_levels_process([
 ]);
 
 if ($result['success']) {
-    wp_redirect($result['redirect_url']);
+    $checkout_url = pmpro_url('checkout', '?level=' . $result['level_id']);
+    wp_redirect($checkout_url);
     exit;
 }
 ```
@@ -68,7 +69,7 @@ fetch('/wp-json/pmpro-magic-levels/v1/process', {
 .then(response => response.json())
 .then(data => {
     if (data.success) {
-        window.location.href = data.redirect_url;
+        window.location.href = '/checkout/?level=' + data.level_id;
     }
 });
 ```
@@ -196,7 +197,7 @@ jQuery(document).ready(function($) {
             contentType: 'application/json',
             success: function(response) {
                 if (response.success) {
-                    window.location.href = response.redirect_url;
+                    window.location.href = '/checkout/?level=' + response.level_id;
                 } else {
                     $('#error-message').text(response.error).show();
                 }
@@ -228,7 +229,8 @@ add_action('wpforms_process_complete', function($fields, $entry, $form_data) {
     $result = pmpro_magic_levels_process($level_data);
     
     if ($result['success']) {
-        wp_redirect($result['redirect_url']);
+        $checkout_url = pmpro_url('checkout', '?level=' . $result['level_id']);
+        wp_redirect($checkout_url);
         exit;
     } else {
         wp_die('Error: ' . $result['error']);
@@ -314,7 +316,7 @@ jQuery(document).ready(function($) {
             contentType: 'application/json',
             success: function(response) {
                 if (response.success) {
-                    window.location.href = response.redirect_url;
+                    window.location.href = '/checkout/?level=' + response.level_id;
                 }
             }
         });
@@ -350,7 +352,7 @@ fetch('/wp-json/pmpro-magic-levels/v1/process', {
 .then(response => response.json())
 .then(data => {
     if (data.success) {
-        window.location.href = data.redirect_url;
+        window.location.href = '/checkout/?level=' + data.level_id;
     }
 });
 ```
@@ -383,12 +385,16 @@ fetch('/wp-json/pmpro-magic-levels/v1/process', {
 {
   "success": true,
   "level_id": 5,
-  "redirect_url": "https://example.com/checkout/?level=5",
   "level_created": false,
   "cached": true,
   "message": "Existing level found"
 }
 ```
+
+You can then build your own redirect URL:
+- Standard: `/checkout/?level=5`
+- Custom: `/custom-checkout/?level=5`
+- With params: `/checkout/?level=5&discount=SAVE10`
 
 ### Error Response
 ```json
@@ -443,8 +449,8 @@ Array
 (
     [success] => 1
     [level_id] => 5
-    [redirect_url] => https://yoursite.com/checkout/?level=5
     [level_created] => 1
+    [cached] => 
     [message] => New level created
 )
 ```
@@ -457,7 +463,6 @@ Array
 (
     [success] => 1
     [level_id] => 5
-    [redirect_url] => https://yoursite.com/checkout/?level=5
     [level_created] => 
     [cached] => 1
     [message] => Existing level found

@@ -5,6 +5,9 @@
  * Complete guide for integrating PMPro Magic Levels with WSForm.
  * Includes both PHP action hooks and REST API webhook methods.
  *
+ * NOTE: The API returns level_id, not redirect_url. 
+ * In WSForm redirect action, use: /checkout/?level=#webhook_response(level_id)
+ *
  * @package PMPro_Magic_Levels
  * @since 1.0.0
  */
@@ -268,8 +271,9 @@ add_action( 'wsf_submit_post_complete', 'pmpro_magic_levels_wsform_variables_han
  *        return 'your-secret-key-here';
  *    } );
  *
- * 8. To redirect after success, add a "Redirect" action after the webhook
- *    and use the response variable: #webhook_response(redirect_url)
+ * 7. To redirect after success, add a "Redirect" action after the webhook
+ *    URL: /checkout/?level=#webhook_response(level_id)
+ *    Or custom: /custom-checkout/?level=#webhook_response(level_id)
  */
 
 // ============================================
@@ -497,8 +501,8 @@ add_action( 'wsf_submit_post_complete', 'pmpro_magic_levels_wsform_tracking_hand
  * 7. ADD REDIRECT ACTION:
  *    - Add another action after webhook
  *    - Select "Redirect"
- *    - URL: #webhook_response(redirect_url)
- *    - This will redirect to the PMPro checkout page
+ *    - URL: /checkout/?level=#webhook_response(level_id)
+ *    - Or custom: /custom-checkout/?level=#webhook_response(level_id)
  *
  * 8. ERROR HANDLING (Optional):
  *    - Add a "Message" action
@@ -1014,7 +1018,7 @@ function pmpro_magic_levels_wsform_debug_logger( $submit ) {
  *    - Test webhook URL directly with Postman or curl
  *
  * 4. "Redirect not working"
- *    - Make sure you're using #webhook_response(redirect_url)
+ *    - Use: /checkout/?level=#webhook_response(level_id)
  *    - Check if webhook returns success: true
  *    - Verify redirect action is after webhook action
  *

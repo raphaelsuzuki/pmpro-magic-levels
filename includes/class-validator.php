@@ -26,18 +26,14 @@ class PMPRO_Magic_Levels_Validator {
 	 */
 	private function get_defaults() {
 		return array(
-			'min_price'              => apply_filters( 'pmpro_magic_levels_min_price', 0.00 ),
-			'max_price'              => apply_filters( 'pmpro_magic_levels_max_price', 9999.99 ),
-			'allowed_periods'        => apply_filters( 'pmpro_magic_levels_allowed_periods', array( 'Day', 'Week', 'Month', 'Year' ) ),
-			'allowed_cycle_numbers'  => apply_filters( 'pmpro_magic_levels_allowed_cycle_numbers', array( 1, 2, 3, 6, 12 ) ),
-			'max_billing_limit'      => apply_filters( 'pmpro_magic_levels_max_billing_limit', 999 ),
-			'min_name_length'        => apply_filters( 'pmpro_magic_levels_min_name_length', 1 ),
-			'max_name_length'        => apply_filters( 'pmpro_magic_levels_max_name_length', 255 ),
-			'name_pattern'           => apply_filters( 'pmpro_magic_levels_name_pattern', null ),
-			'allow_free_levels'      => apply_filters( 'pmpro_magic_levels_allow_free_levels', true ),
+			'allowed_periods'         => apply_filters( 'pmpro_magic_levels_allowed_periods', array( 'Day', 'Week', 'Month', 'Year' ) ),
+			'allowed_cycle_numbers'   => apply_filters( 'pmpro_magic_levels_allowed_cycle_numbers', array( 1, 2, 3, 6, 12 ) ),
+			'min_name_length'         => apply_filters( 'pmpro_magic_levels_min_name_length', 1 ),
+			'max_name_length'         => apply_filters( 'pmpro_magic_levels_max_name_length', 255 ),
+			'name_pattern'            => apply_filters( 'pmpro_magic_levels_name_pattern', null ),
 			'require_initial_payment' => apply_filters( 'pmpro_magic_levels_require_initial_payment', false ),
-			'name_blacklist'         => apply_filters( 'pmpro_magic_levels_name_blacklist', array() ),
-			'max_levels_per_day'     => apply_filters( 'pmpro_magic_levels_max_levels_per_day', 1000 ),
+			'name_blacklist'          => apply_filters( 'pmpro_magic_levels_name_blacklist', array() ),
+			'max_levels_per_day'      => apply_filters( 'pmpro_magic_levels_max_levels_per_day', 1000 ),
 		);
 	}
 
@@ -55,6 +51,10 @@ class PMPRO_Magic_Levels_Validator {
 		// Check required fields.
 		if ( empty( $data['name'] ) ) {
 			return $this->error( 'Name is required', 'missing_required_field' );
+		}
+
+		if ( ! isset( $data['billing_amount'] ) || '' === $data['billing_amount'] ) {
+			return $this->error( 'Billing amount is required', 'missing_required_field' );
 		}
 
 		// Check if name contains group separator (required for PMPro groups).
@@ -95,19 +95,6 @@ class PMPRO_Magic_Levels_Validator {
 			if ( $billing_amount < 0 ) {
 				return $this->error( 'Price cannot be negative', 'invalid_price' );
 			}
-
-			// Check free levels.
-			if ( 0 === $billing_amount && ! $rules['allow_free_levels'] ) {
-				return $this->error( 'Free levels are not allowed', 'free_levels_disabled' );
-			}
-
-			// Check min/max price.
-			if ( $billing_amount < $rules['min_price'] ) {
-				return $this->error( "Price must be at least \${$rules['min_price']}", 'price_below_minimum' );
-			}
-			if ( $billing_amount > $rules['max_price'] ) {
-				return $this->error( "Price cannot exceed \${$rules['max_price']}", 'price_above_maximum' );
-			}
 		}
 
 		// Validate initial payment.
@@ -118,11 +105,8 @@ class PMPRO_Magic_Levels_Validator {
 				return $this->error( 'Initial payment is required', 'initial_payment_required' );
 			}
 
-			if ( $initial_payment < $rules['min_price'] ) {
-				return $this->error( "Initial payment must be at least \${$rules['min_price']}", 'price_below_minimum' );
-			}
-			if ( $initial_payment > $rules['max_price'] ) {
-				return $this->error( "Initial payment cannot exceed \${$rules['max_price']}", 'price_above_maximum' );
+			if ( $initial_payment < 0 ) {
+				return $this->error( 'Initial payment cannot be negative', 'invalid_price' );
 			}
 		}
 
@@ -140,9 +124,12 @@ class PMPRO_Magic_Levels_Validator {
 			}
 		}
 
-		// Validate billing limit.
-		if ( isset( $data['billing_limit'] ) && intval( $data['billing_limit'] ) > $rules['max_billing_limit'] ) {
-			return $this->error( "Billing limit cannot exceed {$rules['max_billing_limit']}", 'billing_limit_exceeded' );
+		// Validate billing limit (must be non-negative integer).
+		if ( isset( $data['billing_limit'] ) ) {
+			$billing_limit = intval( $data['billing_limit'] );
+			if ( $billing_limit < 0 ) {
+				return $this->error( 'Billing limit cannot be negative', 'invalid_billing_limit' );
+			}
 		}
 
 		// Check rate limiting.
