@@ -4,20 +4,42 @@ Dynamically create or find membership levels from form submissions and automatic
 
 ## Overview
 
-PMPro Magic Levels allows you to create custom membership levels on-the-fly based on user input. When a user submits a form with pricing parameters, the plugin will:
+PMPro Magic Levels allows you to **dynamically create or find Paid Memberships Pro (PMPro) membership levels on-the-fly** based on user input.
 
-1. **Validate** the submission against configurable rules
-2. **Search** for an existing level with matching parameters
-3. **Create** a new level if no match exists
+Instead of manually creating every possible membership variation in the admin dashboard, this plugin lets you:
+
+1. **Accept pricing parameters** from a frontend form (Price, Billing Period, Name, etc.)
+2. **Automatically check** if a matching level already exists (to prevent duplicates)
+3. **Create a new level** if one doesn't exist
 4. **Assign** the level to a group (required for PMPro 3.x)
-5. **Redirect** the user to PMPro checkout for that level
+5. **Redirect the user** instantly to the checkout page for that specific level
 
 **Important:** Level names must use the format `"GroupName - LevelName"` (e.g., "Basic - Gold"). This is required for PMPro's group-based level management.
 
-Perfect for:
-- Variable pricing forms where users choose their own price
-- Custom membership builders with multiple options
-- Dynamic pricing calculators
+## Key Use Cases
+
+*   **"Name Your Price" Forms**: Let users donate or pay a custom amount.
+*   **Custom Plan Builders**: Allow users to toggle features that adjust the final price programmatically.
+*   **Dynamic Pricing**: Generate hundreds of price/duration combinations without cluttering your admin panel manually.
+
+## Key Features
+
+*   **Smart Deduplication**: Automatically finds and reuses existing levels if the parameters match exactly.
+*   **High Performance**: Implements a 3-tier caching system (Memory, Transient, DB) to ensure fast lookups (~0-50ms).
+*   **Safety First**: Extensive validation rules (min/max price, name patterns, rate limiting) configurable via WordPress filters.
+*   **Developer Friendly**: Works via REST API webhook or direct PHP function call.
+
+## Compatible Form Plugins
+
+PMPro Magic Levels works via webhook endpoint. Form plugins must be able to send webhook requests AND handle the response for redirect.
+
+**Compatible:**
+- ✅ WSForm - Supports webhook response handling and redirect
+- ✅ Gravity Forms - With webhook addons that support response handling
+- ✅ Formidable Forms - With webhook addons that support response handling
+
+**Not Compatible:**
+- ❌ Contact Form 7 - CF7 webhook plugins (like CF7-to-Zapier) make server-to-server calls and cannot pass webhook responses back to the browser for automatic redirect
 - User-defined membership configurations
 - Any scenario requiring flexible, on-demand level creation
 

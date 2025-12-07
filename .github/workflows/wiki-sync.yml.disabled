@@ -1,0 +1,35 @@
+name: Sync Wiki
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - '.github/workflows/wiki-sync.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Prepare Wiki Content
+        run: |
+          mkdir wiki-staging
+          cp -r docs/* wiki-staging/
+          
+          # GitHub Wiki uses 'Home.md' as the landing page
+          if [ -f wiki-staging/README.md ]; then
+            echo "Renaming README.md to Home.md"
+            mv wiki-staging/README.md wiki-staging/Home.md
+          fi
+
+      - name: Upload to Wiki
+        uses: spenserblack/actions-wiki@v0.2.0
+        with:
+          path: wiki-staging
+          token: ${{ secrets.GITHUB_TOKEN }}

@@ -59,7 +59,5 @@ This is required for PMPro 3.x's group-based level management.
 
 ## Next Steps
 
-- [Configuration Options](configuration.md) - Customize validation rules
-- [WSForm Integration](integrations/wsform.md) - Step-by-step WSForm setup
-- [API Reference](api-reference.md) - Complete API documentation
-- [Troubleshooting](troubleshooting.md) - Common issues and solutions
+- [Configuration Options](FILTERS.md) - Customize validation rules
+- [WSForm Integration](wsform-integration.md) - Step-by-step WSForm setup

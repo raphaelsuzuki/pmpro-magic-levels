@@ -82,8 +82,32 @@ function pmpro_magic_levels_init() {
 		require_once plugin_dir_path( __FILE__ ) . 'includes/class-admin-page.php';
 		PMPRO_Magic_Levels_Admin::init();
 	}
+
+	// Load integrations.
+	pmpro_magic_levels_load_integrations();
 }
 add_action( 'plugins_loaded', 'pmpro_magic_levels_init' );
+
+/**
+ * Load form plugin integrations.
+ *
+ * @since 1.0.0
+ *
+ * @return void
+ */
+function pmpro_magic_levels_load_integrations() {
+	// Future integrations for form plugins that support webhook response handling.
+	
+	// Note: Contact Form 7 is NOT compatible with the webhook approach.
+	// CF7 webhook plugins (like CF7-to-Zapier) make server-to-server calls
+	// and cannot pass webhook responses back to the browser for redirect.
+	
+	// WSForm integration (future).
+	// WSForm can handle webhook responses natively.
+	// if ( class_exists( 'WSForm' ) ) {
+	// 	require_once plugin_dir_path( __FILE__ ) . 'includes/integrations/class-wsform-integration.php';
+	// }
+}
 
 /**
  * Clear all caches.
