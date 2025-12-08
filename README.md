@@ -61,6 +61,8 @@ PMPro Magic Levels works via webhook endpoint. Form plugins must be able to send
 
 **Step 1:** Enable the webhook and get your Bearer token from **PMPro > Magic Levels** admin page.
 
+> **Note:** Currently one Bearer token per site. Use the same token for all integrations.
+
 **Step 2:** Send a POST request with your level data:
 
 ```bash

@@ -19,9 +19,10 @@ Implementing rate limiting at your CDN or proxy level provides:
 ### Built-in Rate Limiting
 
 The plugin includes basic token-based rate limiting:
-- **Default:** 100 requests per hour per Bearer token
+- **Default:** 100 requests per hour (site-wide, single Bearer token)
 - **Purpose:** Basic protection for small sites
 - **Limitation:** Runs in WordPress (after request reaches server)
+- **Note:** Currently supports one Bearer token per site
 
 #### Disable Built-in Rate Limiting
 
@@ -412,6 +413,45 @@ Monitor API endpoint performance and set alerts for:
 - [Apache mod_ratelimit](https://httpd.apache.org/docs/2.4/mod/mod_ratelimit.html)
 - [AWS API Gateway Rate Limiting](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-request-throttling.html)
 - [OWASP API Security](https://owasp.org/www-project-api-security/)
+
+---
+
+## Current Limitations
+
+### Single Bearer Token
+
+The plugin currently supports **one Bearer token per site**. All integrations (Zapier, n8n, forms, etc.) must use the same token.
+
+**Implications:**
+- Rate limiting is site-wide (100 requests/hour total, not per integration)
+- Cannot revoke access for individual integrations
+- Cannot set different rate limits per integration
+
+**Workarounds:**
+- Use external rate limiting (Cloudflare, etc.) for per-integration limits
+- Use IP whitelisting to restrict access
+- Implement custom authentication via filters
+
+### Future Enhancements
+
+Potential improvements for future versions:
+
+1. **Multiple API Keys**
+   - Create separate tokens for each integration
+   - Per-key rate limits
+   - Individual key revocation
+
+2. **Key Management**
+   - Automatic token rotation
+   - Expiration dates
+   - Usage analytics per key
+
+3. **Advanced Authentication**
+   - OAuth 2.0 support
+   - JWT tokens
+   - Webhook signatures (HMAC)
+
+**Note:** These features are not currently implemented. If you need them, consider implementing at the infrastructure level (API Gateway, etc.).
 
 ---
 
