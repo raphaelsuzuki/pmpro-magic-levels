@@ -37,9 +37,12 @@ if ($result['success']) {
 
 ### Using the REST API
 
+**Note:** Get your Bearer token from PMPro > Magic Levels admin page.
+
 ```bash
 curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_FROM_ADMIN" \
   -d '{
     "name": "Basic - Gold",
     "billing_amount": 29.99,

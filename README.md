@@ -77,10 +77,15 @@ if ($result['success']) {
 
 ### Using the REST API Webhook
 
+**Note:** Get your Bearer token from PMPro > Magic Levels admin page.
+
 ```javascript
 fetch('/wp-json/pmpro-magic-levels/v1/process', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer YOUR_TOKEN_FROM_ADMIN'
+    },
     body: JSON.stringify({
         name: 'Premium - Gold',  // Format: "GroupName - LevelName"
         billing_amount: 29.99,
@@ -91,7 +96,7 @@ fetch('/wp-json/pmpro-magic-levels/v1/process', {
 .then(response => response.json())
 .then(data => {
     if (data.success) {
-        window.location.href = '/checkout/?level=' + data.level_id;
+        window.location.href = data.redirect_url;
     }
 });
 ```
@@ -173,6 +178,8 @@ add_filter('pmpro_magic_levels_cache_method', fn() => 'transient');
 
 ## Usage Examples
 
+**Note:** All REST API examples require Bearer token authentication. Get your token from PMPro > Magic Levels admin page and replace `YOUR_TOKEN_FROM_ADMIN` in the examples below.
+
 ### Example 1: Custom HTML Form
 
 ```html
@@ -211,11 +218,14 @@ jQuery(document).ready(function($) {
         $.ajax({
             url: '/wp-json/pmpro-magic-levels/v1/process',
             method: 'POST',
+            headers: {
+                'Authorization': 'Bearer YOUR_TOKEN_FROM_ADMIN'
+            },
             data: JSON.stringify(formData),
             contentType: 'application/json',
             success: function(response) {
                 if (response.success) {
-                    window.location.href = '/checkout/?level=' + response.level_id;
+                    window.location.href = response.redirect_url;
                 } else {
                     $('#error-message').text(response.error).show();
                 }
@@ -324,6 +334,9 @@ jQuery(document).ready(function($) {
         $.ajax({
             url: '/wp-json/pmpro-magic-levels/v1/process',
             method: 'POST',
+            headers: {
+                'Authorization': 'Bearer YOUR_TOKEN_FROM_ADMIN'
+            },
             data: JSON.stringify({
                 name: 'Custom Plan - ' + users + ' Users',
                 billing_amount: price,
@@ -334,7 +347,7 @@ jQuery(document).ready(function($) {
             contentType: 'application/json',
             success: function(response) {
                 if (response.success) {
-                    window.location.href = '/checkout/?level=' + response.level_id;
+                    window.location.href = response.redirect_url;
                 }
             }
         });
