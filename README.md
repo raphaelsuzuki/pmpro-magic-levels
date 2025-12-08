@@ -163,10 +163,6 @@ add_filter('pmpro_magic_levels_rate_limit', function() {
 // Daily limits
 add_filter('pmpro_magic_levels_max_levels_per_day', fn() => 20);
 
-// Webhook authentication
-add_filter('pmpro_magic_levels_webhook_require_auth', '__return_true');
-add_filter('pmpro_magic_levels_webhook_auth_key', fn() => 'my-secret-key-123');
-
 // Caching
 add_filter('pmpro_magic_levels_enable_cache', '__return_true');
 add_filter('pmpro_magic_levels_cache_duration', fn() => HOUR_IN_SECONDS);
@@ -347,19 +343,15 @@ jQuery(document).ready(function($) {
 </script>
 ```
 
-### Example 5: With Webhook Authentication
+### Example 5: With Bearer Token Authentication
 
-```php
-<?php
-// Enable authentication
-add_filter('pmpro_magic_levels_webhook_require_auth', '__return_true');
-add_filter('pmpro_magic_levels_webhook_auth_key', fn() => 'my-super-secret-key-12345');
-```
+Authentication is managed through the admin interface (PMPro > Magic Levels). Get your Bearer token from the admin page.
 
 ```javascript
-// Include auth key in request
+// Use Bearer token from admin settings
+var bearerToken = 'YOUR_TOKEN_FROM_ADMIN_PAGE';
+
 var formData = {
-    auth_key: 'my-super-secret-key-12345',
     name: 'Premium Plan',
     billing_amount: 29.99,
     cycle_period: 'Month',
@@ -368,7 +360,10 @@ var formData = {
 
 fetch('/wp-json/pmpro-magic-levels/v1/process', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + bearerToken
+    },
     body: JSON.stringify(formData)
 })
 .then(response => response.json())
@@ -444,7 +439,9 @@ You can then build your own redirect URL:
 - `blacklisted_name` - Blacklisted word in name
 - `rate_limit_exceeded` - Too many requests
 - `daily_limit_exceeded` - Daily limit reached
-- `invalid_auth_key` - Wrong authentication key
+- `invalid_token` - Invalid Bearer token
+- `missing_authorization` - Missing Authorization header
+- `webhook_disabled` - Webhook endpoint is disabled
 - `level_creation_failed` - Database error
 
 ## Testing

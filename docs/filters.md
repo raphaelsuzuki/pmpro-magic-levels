@@ -197,25 +197,7 @@ add_filter('pmpro_magic_levels_max_levels_per_day', fn() => 50);
 add_filter('pmpro_magic_levels_enable_webhook', '__return_false');
 ```
 
-### `pmpro_magic_levels_webhook_require_auth`
-**Description:** Require authentication for webhook  
-**Type:** Boolean  
-**Default:** `false`  
-**Example:**
-```php
-// Require auth key
-add_filter('pmpro_magic_levels_webhook_require_auth', '__return_true');
-```
-
-### `pmpro_magic_levels_webhook_auth_key`
-**Description:** Authentication key for webhook  
-**Type:** String  
-**Default:** `''` (empty)  
-**Example:**
-```php
-// Set auth key
-add_filter('pmpro_magic_levels_webhook_auth_key', fn() => 'my-secret-key-12345');
-```
+**Note:** Webhook authentication is managed through the admin interface (PMPro > Magic Levels) using Bearer tokens. There are no filters for authentication configuration.
 
 ---
 
@@ -288,9 +270,7 @@ add_filter('pmpro_magic_levels_min_name_length', fn() => 5);
 add_filter('pmpro_magic_levels_max_name_length', fn() => 50);
 add_filter('pmpro_magic_levels_name_blacklist', fn() => ['test', 'demo']);
 
-// Webhook security
-add_filter('pmpro_magic_levels_webhook_require_auth', '__return_true');
-add_filter('pmpro_magic_levels_webhook_auth_key', fn() => 'secret-key-123');
+// Note: Webhook authentication is managed via admin interface (PMPro > Magic Levels)
 ```
 
 ### Example 2: Relaxed Validation
@@ -323,17 +303,18 @@ add_filter('pmpro_magic_levels_cache_method', fn() => 'object');
 add_filter('pmpro_magic_levels_cache_duration', fn() => DAY_IN_SECONDS);
 ```
 
-### Example 4: Secure Webhook Only
+### Example 4: Strict Rate Limiting
 ```php
 <?php
-// Require authentication
-add_filter('pmpro_magic_levels_webhook_require_auth', '__return_true');
-add_filter('pmpro_magic_levels_webhook_auth_key', fn() => wp_generate_password(32, false));
+// Note: Webhook authentication is managed via admin interface (PMPro > Magic Levels)
 
 // Strict rate limiting
 add_filter('pmpro_magic_levels_rate_limit', function() {
-    return ['max_requests' => 10, 'time_window' => 3600, 'by' => 'ip'];
+    return ['max_requests' => 10, 'time_window' => 3600];
 });
+
+// Low daily limit
+add_filter('pmpro_magic_levels_max_levels_per_day', fn() => 50);
 ```
 
 ---
@@ -382,8 +363,8 @@ add_action('pmpro_magic_levels_cache_cleared', function() {
 | `rate_limit` | 100 req/hour | array |
 | `max_levels_per_day` | 1000 | int |
 | `enable_webhook` | true | bool |
-| `webhook_require_auth` | false | bool |
-| `webhook_auth_key` | '' | string |
+| `enable_rate_limit` | true | bool |
+| `debug_mode` | WP_DEBUG | bool |
 | `enable_cache` | true | bool |
 | `cache_duration` | 3600 | int |
 | `cache_method` | 'transient' | string |

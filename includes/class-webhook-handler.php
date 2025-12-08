@@ -134,11 +134,6 @@ class PMPRO_Magic_Levels_Webhook_Handler
 		// Get request data.
 		$params = $request->get_json_params();
 
-		// Remove auth_key from params if present.
-		if (isset($params['auth_key'])) {
-			unset($params['auth_key']);
-		}
-
 		// Process level.
 		$result = pmpro_magic_levels_process($params);
 

@@ -182,30 +182,23 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   }'
 ```
 
-## With Authentication
+## With Bearer Token Authentication
 
-First, enable authentication in `functions.php`:
-
-```php
-add_filter( 'pmpro_magic_levels_webhook_require_auth', '__return_true' );
-add_filter( 'pmpro_magic_levels_webhook_auth_key', function() {
-    return 'your-secret-key-here';
-} );
-```
-
-Then include the auth key in your request:
+Get your Bearer token from the admin interface (PMPro > Magic Levels), then include it in the Authorization header:
 
 ```bash
 curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_FROM_ADMIN_PAGE" \
   -d '{
-    "auth_key": "your-secret-key-here",
     "name": "Secure - Premium",
     "billing_amount": 39.99,
     "cycle_period": "Month",
     "cycle_number": 1
   }'
 ```
+
+**Note:** The Bearer token is managed through the admin interface. Enable the webhook endpoint in PMPro > Magic Levels to generate your token.
 
 ## How Groups Work
 
