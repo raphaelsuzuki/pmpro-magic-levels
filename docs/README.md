@@ -9,7 +9,7 @@ Welcome to the PMPro Magic Levels documentation!
 - [Security Best Practices](security.md) - Rate limiting and security recommendations
 
 ### Configuration
-- [Configuration Options](FILTERS.md) - All available filters and settings
+- [Configuration Options](filters.md) - All available filters and settings
 - [Advanced Validation Examples](advanced-validation.md) - Cookbook of validation examples
 
 ### Integration Guides

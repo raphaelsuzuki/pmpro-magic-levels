@@ -36,6 +36,3 @@ build/
 *.bak
 *.swp
 *~
-
-SECURITY-AUDIT.md
-SECURITY-FIXES-SUMMARY.md

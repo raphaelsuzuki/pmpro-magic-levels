@@ -59,7 +59,7 @@ If your contribution adds or changes functionality:
 
 1. Update relevant documentation in `/docs`
 2. Add code examples if applicable
-3. Update FILTERS.md if adding new filters
+3. Update filters.md if adding new filters
 4. Update README.md if needed
 
 ## Questions?

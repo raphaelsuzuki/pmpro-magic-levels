@@ -173,7 +173,7 @@ add_filter('pmpro_magic_levels_cache_duration', fn() => HOUR_IN_SECONDS);
 add_filter('pmpro_magic_levels_cache_method', fn() => 'transient');
 ```
 
-**📖 See [FILTERS.md](FILTERS.md) for complete filter reference with all 20+ available options.**
+**📖 See [filters.md](docs/filters.md) for complete filter reference with all 20+ available options.**
 
 ## Usage Examples
 
@@ -567,7 +567,7 @@ Quick links:
 - **[Troubleshooting](docs/troubleshooting.md)** - Common issues
 
 Additional resources:
-- **[FILTERS.md](FILTERS.md)** - Complete filter reference
+- **[filters.md](docs/filters.md)** - Complete filter reference
 - **[examples/](examples/)** - Code examples for various form plugins
 
 ## Support
