@@ -57,27 +57,37 @@ PMPro Magic Levels works via webhook endpoint. Form plugins must be able to send
 
 ## Quick Start
 
-### Minimum Working Example
+### Using the Webhook (Recommended)
 
-```php
-// In your form handler or custom code
-$result = pmpro_magic_levels_process([
-    'name' => 'Premium - Gold',  // Format: "GroupName - LevelName"
-    'billing_amount' => 29.99,
-    'cycle_period' => 'Month',
-    'cycle_number' => 1
-]);
+**Step 1:** Enable the webhook and get your Bearer token from **PMPro > Magic Levels** admin page.
 
-if ($result['success']) {
-    $checkout_url = pmpro_url('checkout', '?level=' . $result['level_id']);
-    wp_redirect($checkout_url);
-    exit;
+**Step 2:** Send a POST request with your level data:
+
+```bash
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_FROM_ADMIN" \
+  -d '{
+    "name": "Premium - Gold",
+    "billing_amount": 29.99,
+    "cycle_period": "Month",
+    "cycle_number": 1
+  }'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "level_id": 5,
+  "redirect_url": "https://yoursite.com/checkout/?pmpro_level=5",
+  "level_created": true
 }
 ```
 
-### Using the REST API Webhook
+**Step 3:** Redirect user to the `redirect_url` for checkout.
 
-**Note:** Get your Bearer token from PMPro > Magic Levels admin page.
+### Using JavaScript
 
 ```javascript
 fetch('/wp-json/pmpro-magic-levels/v1/process', {
@@ -87,7 +97,7 @@ fetch('/wp-json/pmpro-magic-levels/v1/process', {
         'Authorization': 'Bearer YOUR_TOKEN_FROM_ADMIN'
     },
     body: JSON.stringify({
-        name: 'Premium - Gold',  // Format: "GroupName - LevelName"
+        name: 'Premium - Gold',
         billing_amount: 29.99,
         cycle_period: 'Month',
         cycle_number: 1
@@ -100,6 +110,27 @@ fetch('/wp-json/pmpro-magic-levels/v1/process', {
     }
 });
 ```
+
+### Using PHP (Advanced)
+
+For custom WordPress integrations, you can call the function directly:
+
+```php
+$result = pmpro_magic_levels_process([
+    'name' => 'Premium - Gold',
+    'billing_amount' => 29.99,
+    'cycle_period' => 'Month',
+    'cycle_number' => 1
+]);
+
+if ($result['success']) {
+    $checkout_url = pmpro_url('checkout', '?pmpro_level=' . $result['level_id']);
+    wp_redirect($checkout_url);
+    exit;
+}
+```
+
+**Note:** PHP function doesn't require authentication (already in WordPress context).
 
 ## How It Works
 
