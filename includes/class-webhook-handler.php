@@ -142,8 +142,8 @@ class PMPRO_Magic_Levels_Webhook_Handler
 		// Process level.
 		$result = pmpro_magic_levels_process($params);
 
-		// Add debug info to error responses.
-		if (!$result['success']) {
+		// Add debug info to error responses (only if debug mode enabled).
+		if (!$result['success'] && apply_filters('pmpro_magic_levels_debug_mode', defined('WP_DEBUG') && WP_DEBUG)) {
 			$result['debug'] = array(
 				'received_params' => $params,
 				'timestamp' => current_time('mysql'),

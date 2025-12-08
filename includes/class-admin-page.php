@@ -120,18 +120,7 @@ class PMPRO_Magic_Levels_Admin
 		return base64_encode($random_bytes);
 	}
 
-	/**
-	 * Get webhook URL.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return string Webhook URL.
-	 */
-	public static function get_webhook_url()
-	{
-		$key = self::get_webhook_key();
-		return rest_url('pmpro-magic-levels/v1/process?key=' . $key);
-	}
+
 
 	/**
 	 * Regenerate webhook key.
@@ -261,14 +250,23 @@ class PMPRO_Magic_Levels_Admin
 
 		// Handle form submission.
 		if (isset($_POST['pmpro_ml_save_settings'])) {
+			// Verify user has permission.
+			if (!current_user_can('manage_options')) {
+				wp_die(esc_html__('You do not have permission to perform this action.', 'pmpro-magic-levels'));
+			}
+
+			// Verify nonce.
 			check_admin_referer('pmpro_ml_settings');
-			update_option('pmpro_ml_webhook_enabled', isset($_POST['pmpro_ml_webhook_enabled']) ? '1' : '0');
+
+			// Validate and save.
+			$webhook_enabled = isset($_POST['pmpro_ml_webhook_enabled']) && '1' === $_POST['pmpro_ml_webhook_enabled'] ? '1' : '0';
+			update_option('pmpro_ml_webhook_enabled', $webhook_enabled);
+
 			echo '<div class="notice notice-success"><p>' . esc_html__('Settings saved.', 'pmpro-magic-levels') . '</p></div>';
 		}
 
 		$webhook_enabled = get_option('pmpro_ml_webhook_enabled', '0');
 		$webhook_key = get_option('pmpro_ml_webhook_key');
-		$webhook_url = self::get_webhook_url();
 		$regenerated = isset($_GET['regenerated']) ? true : false;
 		$test_error = isset($_GET['test_error']) ? sanitize_text_field(wp_unslash($_GET['test_error'])) : '';
 		?>
@@ -288,6 +286,18 @@ class PMPRO_Magic_Levels_Admin
 				<div class="notice notice-error is-dismissible">
 					<p><strong><?php esc_html_e('Test failed:', 'pmpro-magic-levels'); ?></strong>
 						<?php echo esc_html($test_error); ?></p>
+				</div>
+			<?php endif; ?>
+
+			<?php if ('1' === $webhook_enabled): ?>
+				<div class="notice notice-info">
+					<p>
+						<strong><?php esc_html_e('Security Recommendation:', 'pmpro-magic-levels'); ?></strong>
+						<?php esc_html_e('For production sites, we recommend implementing rate limiting at your CDN or proxy level (Cloudflare, BunnyCDN, etc.) for better performance and security. The plugin includes basic rate limiting, but external solutions provide superior protection.', 'pmpro-magic-levels'); ?>
+						<a href="https://github.com/YOUR_REPO/pmpro-magic-levels/blob/master/docs/security.md" target="_blank">
+							<?php esc_html_e('View security guide →', 'pmpro-magic-levels'); ?>
+						</a>
+					</p>
 				</div>
 			<?php endif; ?>
 

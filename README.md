@@ -559,6 +559,7 @@ add_filter('pmpro_magic_levels_cache_method', fn() => 'transient');
 
 Quick links:
 - **[Getting Started](docs/getting-started.md)** - Installation and quick start
+- **[Security Best Practices](docs/security.md)** - Rate limiting and security recommendations
 - **[WSForm Integration](docs/integrations/wsform.md)** - Complete WSForm guide
 - **[Configuration](docs/configuration.md)** - All filter options
 - **[API Reference](docs/api-reference.md)** - REST API documentation

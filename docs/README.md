@@ -6,6 +6,7 @@ Welcome to the PMPro Magic Levels documentation!
 
 ### Getting Started
 - [Getting Started Guide](getting-started.md) - Installation and quick start
+- [Security Best Practices](security.md) - Rate limiting and security recommendations
 
 ### Configuration
 - [Configuration Options](FILTERS.md) - All available filters and settings

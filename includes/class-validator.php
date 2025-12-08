@@ -150,21 +150,32 @@ class PMPRO_Magic_Levels_Validator {
 	/**
 	 * Check rate limiting.
 	 *
+	 * Basic token-based rate limiting. For production sites, we recommend
+	 * implementing rate limiting at the CDN/proxy level (Cloudflare, etc.)
+	 * for better performance and security.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @return array Validation result.
 	 */
 	private function check_rate_limit() {
+		// Allow users to disable built-in rate limiting if using external solutions.
+		if ( ! apply_filters( 'pmpro_magic_levels_enable_rate_limit', true ) ) {
+			return array( 'valid' => true );
+		}
+
 		$rate_limit = apply_filters(
 			'pmpro_magic_levels_rate_limit',
 			array(
 				'max_requests' => 100,
 				'time_window'  => 3600,
-				'by'           => 'ip',
 			)
 		);
 
-		$identifier    = 'user' === $rate_limit['by'] ? get_current_user_id() : $this->get_client_ip();
+		// Use Bearer token for rate limiting (more reliable for webhooks).
+		$token      = $this->get_current_token();
+		$identifier = ! empty( $token ) ? $token : 'anonymous_' . $this->get_client_ip();
+
 		$transient_key = 'pmpro_magic_levels_rate_' . md5( $identifier );
 
 		$requests = get_transient( $transient_key );
@@ -227,20 +238,43 @@ class PMPRO_Magic_Levels_Validator {
 	/**
 	 * Get client IP address.
 	 *
+	 * Returns REMOTE_ADDR only (cannot be spoofed). For accurate IP detection
+	 * behind CDNs/proxies, implement rate limiting at the CDN/proxy level.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @return string Client IP address.
 	 */
 	private function get_client_ip() {
-		$ip = '';
-		if ( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
-			$ip = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CLIENT_IP'] ) );
-		} elseif ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-			$ip = sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) );
-		} elseif ( ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
-			$ip = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
+		return isset( $_SERVER['REMOTE_ADDR'] )
+			? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) )
+			: '';
+	}
+
+	/**
+	 * Get current Bearer token from request.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string Token or empty string.
+	 */
+	private function get_current_token() {
+		// Get Authorization header.
+		$auth_header = '';
+
+		if ( isset( $_SERVER['HTTP_AUTHORIZATION'] ) ) {
+			$auth_header = sanitize_text_field( wp_unslash( $_SERVER['HTTP_AUTHORIZATION'] ) );
+		} elseif ( function_exists( 'apache_request_headers' ) ) {
+			$headers     = apache_request_headers();
+			$auth_header = isset( $headers['Authorization'] ) ? sanitize_text_field( $headers['Authorization'] ) : '';
 		}
-		return $ip;
+
+		// Extract token from "Bearer TOKEN" format.
+		if ( preg_match( '/Bearer\s+(.*)$/i', $auth_header, $matches ) ) {
+			return trim( $matches[1] );
+		}
+
+		return '';
 	}
 
 	/**
