@@ -457,6 +457,4 @@ Potential improvements for future versions:
 
 ## Support
 
-For security issues, please report privately to: security@yoursite.com
-
 For general questions, use GitHub Issues.

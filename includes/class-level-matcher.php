@@ -204,12 +204,144 @@ class PMPRO_Magic_Levels_Level_Matcher
 
 			// Save account message (PMPro 3.0+).
 			if (!empty($params['account_message']) && function_exists('update_pmpro_membership_level_meta')) {
-				update_pmpro_membership_level_meta($level->id, 'account_message', wp_kses_post($params['account_message']));
+				update_pmpro_membership_level_meta($level->id, 'membership_account_message', wp_kses_post($params['account_message']));
 			}
+
+			// Assign content protection.
+			$this->assign_content_protection($level->id, $params);
 		}
 
 		// Return level ID.
 		return $level->id ? intval($level->id) : null;
+	}
+
+	/**
+	 * Assign content protection to a level.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int   $level_id Level ID.
+	 * @param array $params   Level parameters.
+	 * @return void
+	 */
+	private function assign_content_protection($level_id, $params)
+	{
+		// Assign protected categories.
+		if (!empty($params['protected_categories']) && is_array($params['protected_categories'])) {
+			$this->assign_protected_categories($level_id, $params['protected_categories']);
+		}
+
+		// Assign protected pages.
+		if (!empty($params['protected_pages']) && is_array($params['protected_pages'])) {
+			$this->assign_protected_pages($level_id, $params['protected_pages']);
+		}
+
+		// Assign protected posts.
+		if (!empty($params['protected_posts']) && is_array($params['protected_posts'])) {
+			$this->assign_protected_posts($level_id, $params['protected_posts']);
+		}
+	}
+
+	/**
+	 * Assign protected categories to a level.
+	 *
+	 * Uses PMPro's built-in function to assign categories.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int   $level_id     Level ID.
+	 * @param array $category_ids Array of category IDs.
+	 * @return void
+	 */
+	private function assign_protected_categories($level_id, $category_ids)
+	{
+		// Sanitize category IDs.
+		$category_ids = array_map('intval', $category_ids);
+		$category_ids = array_filter($category_ids, function ($id) {
+			return $id > 0;
+		});
+
+		if (empty($category_ids)) {
+			return;
+		}
+
+		// Use PMPro's built-in function.
+		if (function_exists('pmpro_updateMembershipCategories')) {
+			pmpro_updateMembershipCategories($level_id, $category_ids);
+		}
+	}
+
+	/**
+	 * Assign protected pages to a level.
+	 *
+	 * Adds this level to the page's existing restrictions (doesn't replace).
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int   $level_id Level ID.
+	 * @param array $page_ids Array of page IDs.
+	 * @return void
+	 */
+	private function assign_protected_pages($level_id, $page_ids)
+	{
+		global $wpdb;
+
+		// Sanitize page IDs.
+		$page_ids = array_map('intval', $page_ids);
+		$page_ids = array_filter($page_ids, function ($id) {
+			return $id > 0;
+		});
+
+		if (empty($page_ids)) {
+			return;
+		}
+
+		foreach ($page_ids as $page_id) {
+			// Get existing level restrictions for this page.
+			$existing_levels = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT membership_id FROM {$wpdb->pmpro_memberships_pages} WHERE page_id = %d",
+					$page_id
+				)
+			);
+
+			// Add this level if not already present.
+			if (!in_array($level_id, $existing_levels, true)) {
+				$existing_levels[] = $level_id;
+			}
+
+			// Use PMPro's function if available (PMPro 3.1+).
+			if (function_exists('pmpro_update_post_level_restrictions')) {
+				pmpro_update_post_level_restrictions($page_id, $existing_levels);
+			} else {
+				// Fallback: Insert directly.
+				$wpdb->insert(
+					$wpdb->pmpro_memberships_pages,
+					array(
+						'membership_id' => $level_id,
+						'page_id'       => $page_id,
+					),
+					array('%d', '%d')
+				);
+			}
+		}
+	}
+
+	/**
+	 * Assign protected posts to a level.
+	 *
+	 * Adds this level to the post's existing restrictions (doesn't replace).
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int   $level_id Level ID.
+	 * @param array $post_ids Array of post IDs.
+	 * @return void
+	 */
+	private function assign_protected_posts($level_id, $post_ids)
+	{
+		// Posts and pages use the same table, so we can reuse the logic.
+		$this->assign_protected_pages($level_id, $post_ids);
 	}
 
 	/**

@@ -144,6 +144,89 @@ class PMPRO_Magic_Levels_Validator {
 			return $daily_limit_check;
 		}
 
+		// Validate content protection parameters.
+		$content_validation = $this->validate_content_protection( $data );
+		if ( ! $content_validation['valid'] ) {
+			return $content_validation;
+		}
+
+		return array( 'valid' => true );
+	}
+
+	/**
+	 * Validate content protection parameters.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $data Level data.
+	 * @return array Validation result.
+	 */
+	private function validate_content_protection( $data ) {
+		// Validate protected_categories.
+		if ( isset( $data['protected_categories'] ) ) {
+			if ( ! is_array( $data['protected_categories'] ) ) {
+				return $this->error( 'protected_categories must be an array', 'invalid_content_protection' );
+			}
+
+			foreach ( $data['protected_categories'] as $cat_id ) {
+				$cat_id = intval( $cat_id );
+				if ( $cat_id <= 0 ) {
+					return $this->error( 'Invalid category ID in protected_categories', 'invalid_category_id' );
+				}
+
+				// Check if category exists.
+				$term = get_term( $cat_id );
+				if ( is_wp_error( $term ) || ! $term ) {
+					return $this->error( "Category ID {$cat_id} does not exist", 'category_not_found' );
+				}
+
+				// Verify it's a category or post_tag.
+				if ( ! in_array( $term->taxonomy, array( 'category', 'post_tag' ), true ) ) {
+					return $this->error( "Term ID {$cat_id} is not a category or tag", 'invalid_taxonomy' );
+				}
+			}
+		}
+
+		// Validate protected_pages.
+		if ( isset( $data['protected_pages'] ) ) {
+			if ( ! is_array( $data['protected_pages'] ) ) {
+				return $this->error( 'protected_pages must be an array', 'invalid_content_protection' );
+			}
+
+			foreach ( $data['protected_pages'] as $page_id ) {
+				$page_id = intval( $page_id );
+				if ( $page_id <= 0 ) {
+					return $this->error( 'Invalid page ID in protected_pages', 'invalid_page_id' );
+				}
+
+				// Check if page exists.
+				$page = get_post( $page_id );
+				if ( ! $page || 'page' !== $page->post_type ) {
+					return $this->error( "Page ID {$page_id} does not exist", 'page_not_found' );
+				}
+			}
+		}
+
+		// Validate protected_posts.
+		if ( isset( $data['protected_posts'] ) ) {
+			if ( ! is_array( $data['protected_posts'] ) ) {
+				return $this->error( 'protected_posts must be an array', 'invalid_content_protection' );
+			}
+
+			foreach ( $data['protected_posts'] as $post_id ) {
+				$post_id = intval( $post_id );
+				if ( $post_id <= 0 ) {
+					return $this->error( 'Invalid post ID in protected_posts', 'invalid_post_id' );
+				}
+
+				// Check if post exists.
+				$post = get_post( $post_id );
+				if ( ! $post ) {
+					return $this->error( "Post ID {$post_id} does not exist", 'post_not_found' );
+				}
+			}
+		}
+
 		return array( 'valid' => true );
 	}
 

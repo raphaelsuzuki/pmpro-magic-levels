@@ -26,6 +26,7 @@ Instead of manually creating every possible membership variation in the admin da
 
 *   **Smart Deduplication**: Automatically finds and reuses existing levels if the parameters match exactly.
 *   **High Performance**: Implements a 3-tier caching system (Memory, Transient, DB) to ensure fast lookups (~0-50ms).
+*   **Content Protection**: Automatically protect categories, pages, and posts when creating levels.
 *   **Safety First**: Extensive validation rules (min/max price, name patterns, rate limiting) configurable via WordPress filters.
 *   **Developer Friendly**: Works via REST API webhook or direct PHP function call.
 
@@ -34,14 +35,10 @@ Instead of manually creating every possible membership variation in the admin da
 PMPro Magic Levels works via webhook endpoint. Form plugins must be able to send webhook requests AND handle the response for redirect.
 
 **Compatible:**
-- ✅ WSForm - Supports webhook response handling and redirect
-- ✅ Gravity Forms - With webhook addons that support response handling
-- ✅ Formidable Forms - With webhook addons that support response handling
+- WSForm - Supports webhook response handling and redirect
 
 **Not Compatible:**
-- ❌ Contact Form 7 - CF7 webhook plugins (like CF7-to-Zapier) make server-to-server calls and cannot pass webhook responses back to the browser for automatic redirect
-- User-defined membership configurations
-- Any scenario requiring flexible, on-demand level creation
+- Contact Form 7 - CF7 webhook plugins (like CF7-to-Zapier) make server-to-server calls and cannot pass webhook responses back to the browser for automatic redirect
 
 ## Requirements
 
@@ -73,7 +70,9 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
     "name": "Premium - Gold",
     "billing_amount": 29.99,
     "cycle_period": "Month",
-    "cycle_number": 1
+    "cycle_number": 1,
+    "protected_categories": [5, 12],
+    "protected_pages": [42]
   }'
 ```
 
@@ -82,7 +81,7 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
 {
   "success": true,
   "level_id": 5,
-  "redirect_url": "https://yoursite.com/checkout/?pmpro_level=5",
+  "redirect_url": "https://yoursite.com/membership-checkout/?pmpro_level=5",
   "level_created": true
 }
 ```
@@ -389,7 +388,57 @@ jQuery(document).ready(function($) {
 </script>
 ```
 
-### Example 5: With Bearer Token Authentication
+### Example 5: With Content Protection
+
+Automatically protect content when creating a level:
+
+```javascript
+var formData = {
+    name: 'Premium - Gold',
+    billing_amount: 29.99,
+    cycle_period: 'Month',
+    cycle_number: 1,
+    protected_categories: [5, 12],  // Protect categories with IDs 5 and 12
+    protected_pages: [42, 67],      // Protect pages with IDs 42 and 67
+    protected_posts: [123, 456]     // Protect posts with IDs 123 and 456
+};
+
+fetch('/wp-json/pmpro-magic-levels/v1/process', {
+    method: 'POST',
+    headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer YOUR_TOKEN_FROM_ADMIN'
+    },
+    body: JSON.stringify(formData)
+})
+.then(response => response.json())
+.then(data => {
+    if (data.success) {
+        window.location.href = data.redirect_url;
+    }
+});
+```
+
+**PHP Example:**
+```php
+<?php
+$result = pmpro_magic_levels_process([
+    'name' => 'Premium - Gold',
+    'billing_amount' => 29.99,
+    'cycle_period' => 'Month',
+    'cycle_number' => 1,
+    'protected_categories' => [5, 12],
+    'protected_pages' => [42],
+    'protected_posts' => [123, 456]
+]);
+
+if ($result['success']) {
+    wp_redirect($result['redirect_url']);
+    exit;
+}
+```
+
+### Example 6: With Bearer Token Authentication
 
 Authentication is managed through the admin interface (PMPro > Magic Levels). Get your Bearer token from the admin page.
 
@@ -427,7 +476,7 @@ fetch('/wp-json/pmpro-magic-levels/v1/process', {
 ### Required
 - `name` (string) - Level name in format "GroupName - LevelName" (e.g., "Basic - Gold")
 
-### Optional
+### Optional - Billing & Pricing
 - `description` (string) - Level description
 - `confirmation` (string) - Confirmation message
 - `initial_payment` (float) - One-time payment
@@ -440,6 +489,13 @@ fetch('/wp-json/pmpro-magic-levels/v1/process', {
 - `expiration_number` (int) - Expiration duration
 - `expiration_period` (string) - 'Day', 'Week', 'Month', 'Year'
 - `allow_signups` (int) - 1 or 0
+
+### Optional - Content Protection
+- `protected_categories` (array) - Array of category/tag IDs to protect (e.g., [5, 12, 18])
+- `protected_pages` (array) - Array of page IDs to protect (e.g., [42, 67])
+- `protected_posts` (array) - Array of post IDs to protect (e.g., [123, 456])
+
+**Note:** Content protection is additive - if a page/post is already protected by other levels, this level will be added to the existing restrictions.
 
 ## API Response Format
 
@@ -489,6 +545,14 @@ You can then build your own redirect URL:
 - `missing_authorization` - Missing Authorization header
 - `webhook_disabled` - Webhook endpoint is disabled
 - `level_creation_failed` - Database error
+- `invalid_content_protection` - Content protection parameter is not an array
+- `invalid_category_id` - Category ID is invalid
+- `category_not_found` - Category does not exist
+- `invalid_taxonomy` - Term is not a category or tag
+- `invalid_page_id` - Page ID is invalid
+- `page_not_found` - Page does not exist
+- `invalid_post_id` - Post ID is invalid
+- `post_not_found` - Post does not exist
 
 ## Testing
 
@@ -598,20 +662,18 @@ add_filter('pmpro_magic_levels_cache_method', fn() => 'transient');
 
 ## Documentation
 
-📚 **[Complete Documentation](docs/)** - Full documentation in the `/docs` folder
+**[Complete Documentation](docs/)** - Full documentation in the `/docs` folder
 
 Quick links:
 - **[Getting Started](docs/getting-started.md)** - Installation and quick start
+- **[Content Protection](docs/content-protection.md)** - Automatically protect content when creating levels
 - **[Security Best Practices](docs/security.md)** - Rate limiting and security recommendations
-- **[WSForm Integration](docs/integrations/wsform.md)** - Complete WSForm guide
-- **[Configuration](docs/configuration.md)** - All filter options
-- **[API Reference](docs/api-reference.md)** - REST API documentation
+- **[WSForm Integration](docs/wsform-integration.md)** - Complete WSForm guide
+- **[Configuration Filters](docs/filters.md)** - Complete filter reference
 - **[cURL Examples](docs/curl-examples.md)** - Test examples
-- **[Troubleshooting](docs/troubleshooting.md)** - Common issues
 
 Additional resources:
-- **[filters.md](docs/filters.md)** - Complete filter reference
-- **[examples/](examples/)** - Code examples for various form plugins
+- **[Advanced Validation](docs/advanced-validation.md)** - Validation examples cookbook
 
 ## Support
 

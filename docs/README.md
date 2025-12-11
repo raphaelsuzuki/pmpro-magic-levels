@@ -11,6 +11,7 @@ Welcome to the PMPro Magic Levels documentation!
 ### Configuration
 - [Configuration Options](filters.md) - All available filters and settings
 - [Advanced Validation Examples](advanced-validation.md) - Cookbook of validation examples
+- [Content Protection](content-protection.md) - Automatically protect content when creating levels
 
 ### Integration Guides
 - [WSForm Integration](wsform-integration.md) - Complete WSForm guide

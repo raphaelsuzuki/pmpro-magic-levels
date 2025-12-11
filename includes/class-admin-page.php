@@ -181,6 +181,8 @@ class PMPRO_Magic_Levels_Admin
 		$test_data = array(
 			'name' => 'TEST GROUP - ' . sprintf(__('TEST LEVEL %s', 'pmpro-magic-levels'), $random_id),
 			'description' => __('This is a test level created by PMPro Magic Levels webhook test. You can safely delete this level.', 'pmpro-magic-levels'),
+			'confirmation' => sprintf(__('Thank you for joining TEST LEVEL %s! This is a test confirmation message.', 'pmpro-magic-levels'), $random_id),
+			'account_message' => sprintf(__('Welcome to TEST LEVEL %s! Your benefits include: Test access, Demo features, Sample content. This is a test account message.', 'pmpro-magic-levels'), $random_id),
 			'billing_amount' => $billing_amount,
 			'cycle_period' => $periods[array_rand($periods)],
 			'cycle_number' => $cycle_numbers[array_rand($cycle_numbers)],
@@ -192,6 +194,21 @@ class PMPRO_Magic_Levels_Admin
 			'expiration_period' => 'Month',
 			'allow_signups' => 0, // Disable signups for test levels
 		);
+
+		// Add content protection if categories/pages exist.
+		$test_categories = get_categories(array('number' => 3, 'hide_empty' => false));
+		if (!empty($test_categories)) {
+			$test_data['protected_categories'] = array_map(function ($cat) {
+				return $cat->term_id;
+			}, array_slice($test_categories, 0, 2)); // Protect first 2 categories
+		}
+
+		$test_pages = get_pages(array('number' => 3));
+		if (!empty($test_pages)) {
+			$test_data['protected_pages'] = array_map(function ($page) {
+				return $page->ID;
+			}, array_slice($test_pages, 0, 1)); // Protect first page
+		}
 
 		// Make HTTP POST request to webhook endpoint.
 		$response = wp_remote_post(
@@ -412,111 +429,29 @@ class PMPRO_Magic_Levels_Admin
 					<p><?php esc_html_e('Send a POST request to the webhook URL with JSON data containing these parameters:', 'pmpro-magic-levels'); ?>
 					</p>
 
-					<h3><?php esc_html_e('Required Parameters', 'pmpro-magic-levels'); ?></h3>
 					<table class="widefat striped">
 						<thead>
 							<tr>
 								<th style="width: 200px;"><?php esc_html_e('Parameter', 'pmpro-magic-levels'); ?></th>
 								<th style="width: 100px;"><?php esc_html_e('Type', 'pmpro-magic-levels'); ?></th>
+								<th style="width: 80px;"><?php esc_html_e('Required', 'pmpro-magic-levels'); ?></th>
 								<th><?php esc_html_e('Description', 'pmpro-magic-levels'); ?></th>
 							</tr>
 						</thead>
 						<tbody>
+							<!-- General Information -->
+							<tr>
+								<td colspan="4" style="background: #f0f0f1; font-weight: bold; padding: 8px;">
+									<?php esc_html_e('General Information', 'pmpro-magic-levels'); ?>
+								</td>
+							</tr>
 							<tr>
 								<td><input type="text" readonly value="name" onclick="this.select();"
 										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 100px;">
 								</td>
 								<td>string</td>
-								<td><?php esc_html_e('Level name in format "GroupName - LevelName" (e.g., "Premium - Gold Monthly")', 'pmpro-magic-levels'); ?>
-								</td>
-							</tr>
-							<tr>
-								<td><input type="text" readonly value="billing_amount" onclick="this.select();"
-										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 150px;">
-								</td>
-								<td>float</td>
-								<td><?php esc_html_e('Recurring billing amount (required to prevent free levels)', 'pmpro-magic-levels'); ?>
-								</td>
-							</tr>
-
-						</tbody>
-					</table>
-
-					<h3><?php esc_html_e('Optional Parameters', 'pmpro-magic-levels'); ?></h3>
-					<table class="widefat striped">
-						<thead>
-							<tr>
-								<th style="width: 200px;"><?php esc_html_e('Parameter', 'pmpro-magic-levels'); ?></th>
-								<th style="width: 100px;"><?php esc_html_e('Type', 'pmpro-magic-levels'); ?></th>
-								<th><?php esc_html_e('Description', 'pmpro-magic-levels'); ?></th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr>
-								<td><input type="text" readonly value="cycle_number" onclick="this.select();"
-										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 130px;">
-								</td>
-								<td>integer</td>
-								<td><?php esc_html_e('Billing cycle number (default: 1)', 'pmpro-magic-levels'); ?></td>
-							</tr>
-							<tr>
-								<td><input type="text" readonly value="cycle_period" onclick="this.select();"
-										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 130px;">
-								</td>
-								<td>string</td>
-								<td><?php esc_html_e('Billing period: Day, Week, Month, Year (default: Month)', 'pmpro-magic-levels'); ?>
-								</td>
-							</tr>
-							<tr>
-								<td><input type="text" readonly value="initial_payment" onclick="this.select();"
-										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 150px;">
-								</td>
-								<td>float</td>
-								<td><?php esc_html_e('One-time initial payment', 'pmpro-magic-levels'); ?></td>
-							</tr>
-							<tr>
-								<td><input type="text" readonly value="billing_limit" onclick="this.select();"
-										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 130px;">
-								</td>
-								<td>integer</td>
-								<td><?php esc_html_e('Number of billing cycles before expiration', 'pmpro-magic-levels'); ?>
-								</td>
-							</tr>
-							<tr>
-								<td><input type="text" readonly value="trial_amount" onclick="this.select();"
-										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 130px;">
-								</td>
-								<td>float</td>
-								<td><?php esc_html_e('Trial period amount', 'pmpro-magic-levels'); ?></td>
-							</tr>
-							<tr>
-								<td><input type="text" readonly value="trial_limit" onclick="this.select();"
-										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 120px;">
-								</td>
-								<td>integer</td>
-								<td><?php esc_html_e('Trial period duration', 'pmpro-magic-levels'); ?></td>
-							</tr>
-							<tr>
-								<td><input type="text" readonly value="expiration_number" onclick="this.select();"
-										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 170px;">
-								</td>
-								<td>integer</td>
-								<td><?php esc_html_e('Expiration duration', 'pmpro-magic-levels'); ?></td>
-							</tr>
-							<tr>
-								<td><input type="text" readonly value="expiration_period" onclick="this.select();"
-										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 170px;">
-								</td>
-								<td>string</td>
-								<td><?php esc_html_e('Expiration period: Day, Week, Month, Year', 'pmpro-magic-levels'); ?>
-								</td>
-							</tr>
-							<tr>
-								<td><input type="text" readonly value="allow_signups" onclick="this.select();"
-										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 150px;">
-								</td>
-								<td>integer</td>
-								<td><?php esc_html_e('1 to allow signups, 0 to disable (default: 1)', 'pmpro-magic-levels'); ?>
+								<td><strong style="color: #d63638;">Required</strong></td>
+								<td><?php esc_html_e('Level name in format "GroupName - LevelName". Example: "Premium - Gold Monthly"', 'pmpro-magic-levels'); ?>
 								</td>
 							</tr>
 							<tr>
@@ -524,25 +459,172 @@ class PMPRO_Magic_Levels_Admin
 										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 150px;">
 								</td>
 								<td>string</td>
-								<td><?php esc_html_e('Level description', 'pmpro-magic-levels'); ?></td>
+								<td>Optional</td>
+								<td><?php esc_html_e('Level description. Example: "Access to premium content and features"', 'pmpro-magic-levels'); ?></td>
 							</tr>
 							<tr>
 								<td><input type="text" readonly value="confirmation" onclick="this.select();"
 										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 150px;">
 								</td>
 								<td>string</td>
-								<td><?php esc_html_e('Confirmation message', 'pmpro-magic-levels'); ?></td>
+								<td>Optional</td>
+								<td><?php esc_html_e('Confirmation message shown after checkout. Example: "Thank you for joining!"', 'pmpro-magic-levels'); ?></td>
 							</tr>
 							<tr>
 								<td><input type="text" readonly value="account_message" onclick="this.select();"
 										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 150px;">
 								</td>
 								<td>string</td>
-								<td><?php esc_html_e('Used to share benefits or link to content specific to a level', 'pmpro-magic-levels'); ?>
+								<td>Optional</td>
+								<td><?php esc_html_e('Message shown on member account page. Example: "Your benefits: Free shipping, 20% discount"', 'pmpro-magic-levels'); ?>
+								</td>
+							</tr>
+
+							<!-- Billing Details -->
+							<tr>
+								<td colspan="4" style="background: #f0f0f1; font-weight: bold; padding: 8px;">
+									<?php esc_html_e('Billing Details', 'pmpro-magic-levels'); ?>
+								</td>
+							</tr>
+							<tr>
+								<td><input type="text" readonly value="billing_amount" onclick="this.select();"
+										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 150px;">
+								</td>
+								<td>float</td>
+								<td><strong style="color: #d63638;">Required</strong></td>
+								<td><?php esc_html_e('Recurring billing amount. Example: 29.99', 'pmpro-magic-levels'); ?>
+								</td>
+							</tr>
+							<tr>
+								<td><input type="text" readonly value="initial_payment" onclick="this.select();"
+										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 150px;">
+								</td>
+								<td>float</td>
+								<td>Defaults to 0</td>
+								<td><?php esc_html_e('One-time initial payment. Example: 49.99', 'pmpro-magic-levels'); ?></td>
+							</tr>
+							<tr>
+								<td><input type="text" readonly value="cycle_number" onclick="this.select();"
+										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 130px;">
+								</td>
+								<td>integer</td>
+								<td>Defaults to 0</td>
+								<td><?php esc_html_e('Billing cycle number. Example: 1 (bill every 1 period), 3 (bill every 3 periods)', 'pmpro-magic-levels'); ?></td>
+							</tr>
+							<tr>
+								<td><input type="text" readonly value="cycle_period" onclick="this.select();"
+										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 130px;">
+								</td>
+								<td>string</td>
+								<td>Optional</td>
+								<td><?php esc_html_e('Billing period. Example: "Month", "Year", "Week", "Day"', 'pmpro-magic-levels'); ?>
+								</td>
+							</tr>
+							<tr>
+								<td><input type="text" readonly value="billing_limit" onclick="this.select();"
+										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 130px;">
+								</td>
+								<td>integer</td>
+								<td>Defaults to 0</td>
+								<td><?php esc_html_e('Number of billing cycles before expiration. Example: 12 (12 payments then cancel). 0 = unlimited', 'pmpro-magic-levels'); ?>
+								</td>
+							</tr>
+							<tr>
+								<td><input type="text" readonly value="trial_amount" onclick="this.select();"
+										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 130px;">
+								</td>
+								<td>float</td>
+								<td>Defaults to 0</td>
+								<td><?php esc_html_e('Trial period amount. Example: 1.00 (charge $1 for trial)', 'pmpro-magic-levels'); ?></td>
+							</tr>
+							<tr>
+								<td><input type="text" readonly value="trial_limit" onclick="this.select();"
+										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 120px;">
+								</td>
+								<td>integer</td>
+								<td>Defaults to 0</td>
+								<td><?php esc_html_e('Trial period duration in billing cycles. Example: 1 (1 month trial if cycle_period is Month)', 'pmpro-magic-levels'); ?></td>
+							</tr>
+
+							<!-- Expiration Settings -->
+							<tr>
+								<td colspan="4" style="background: #f0f0f1; font-weight: bold; padding: 8px;">
+									<?php esc_html_e('Expiration Settings', 'pmpro-magic-levels'); ?>
+								</td>
+							</tr>
+							<tr>
+								<td><input type="text" readonly value="expiration_number" onclick="this.select();"
+										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 170px;">
+								</td>
+								<td>integer</td>
+								<td>Defaults to 0</td>
+								<td><?php esc_html_e('Expiration duration. Example: 12 (expires after 12 periods). 0 = no expiration', 'pmpro-magic-levels'); ?></td>
+							</tr>
+							<tr>
+								<td><input type="text" readonly value="expiration_period" onclick="this.select();"
+										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 170px;">
+								</td>
+								<td>string</td>
+								<td>Optional</td>
+								<td><?php esc_html_e('Expiration period. Example: "Month", "Year", "Week", "Day"', 'pmpro-magic-levels'); ?>
+								</td>
+							</tr>
+
+							<!-- Content Settings -->
+							<tr>
+								<td colspan="4" style="background: #f0f0f1; font-weight: bold; padding: 8px;">
+									<?php esc_html_e('Content Settings', 'pmpro-magic-levels'); ?>
+								</td>
+							</tr>
+							<tr>
+								<td><input type="text" readonly value="protected_categories" onclick="this.select();"
+										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 200px;">
+								</td>
+								<td>array</td>
+								<td>Optional</td>
+								<td><?php esc_html_e('Array of category/tag IDs to protect. Example: [5, 12, 18]', 'pmpro-magic-levels'); ?>
+								</td>
+							</tr>
+							<tr>
+								<td><input type="text" readonly value="protected_pages" onclick="this.select();"
+										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 170px;">
+								</td>
+								<td>array</td>
+								<td>Optional</td>
+								<td><?php esc_html_e('Array of page IDs to protect. Example: [42, 67, 89]', 'pmpro-magic-levels'); ?>
+								</td>
+							</tr>
+							<tr>
+								<td><input type="text" readonly value="protected_posts" onclick="this.select();"
+										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 170px;">
+								</td>
+								<td>array</td>
+								<td>Optional</td>
+								<td><?php esc_html_e('Array of post IDs to protect. Example: [123, 456, 789]', 'pmpro-magic-levels'); ?>
+								</td>
+							</tr>
+
+							<!-- Other Settings -->
+							<tr>
+								<td colspan="4" style="background: #f0f0f1; font-weight: bold; padding: 8px;">
+									<?php esc_html_e('Other Settings', 'pmpro-magic-levels'); ?>
+								</td>
+							</tr>
+							<tr>
+								<td><input type="text" readonly value="allow_signups" onclick="this.select();"
+										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 150px;">
+								</td>
+								<td>integer</td>
+								<td>Defaults to 1</td>
+								<td><?php esc_html_e('Allow signups for this level. Example: 1 (enabled), 0 (disabled)', 'pmpro-magic-levels'); ?>
 								</td>
 							</tr>
 						</tbody>
 					</table>
+					<p class="description">
+						<strong><?php esc_html_e('Note:', 'pmpro-magic-levels'); ?></strong>
+						<?php esc_html_e('Content protection is additive - if a page/post is already protected by other levels, this level will be added to the existing restrictions.', 'pmpro-magic-levels'); ?>
+					</p>
 				</div>
 			</div>
 
