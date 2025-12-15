@@ -2,7 +2,7 @@
 
 Dynamically create or find membership levels from form submissions and automatically redirect users to checkout.
 
-## Overview
+# Description
 
 PMPro Magic Levels allows you to **dynamically create or find Paid Memberships Pro (PMPro) membership levels on-the-fly** based on user input.
 
@@ -46,17 +46,21 @@ PMPro Magic Levels works via webhook endpoint. Form plugins must be able to send
 - PHP 7.4+
 - Paid Memberships Pro (active)
 
-## Installation
+# Installation
 
 1. Upload the `pmpro-magic-levels` folder to `/wp-content/plugins/`
 2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Configure validation rules via filters (optional - see Configuration section)
+3. Configure validation rules via filters (optional - see Configuration below)
+
+## Configuration
+
+All settings are configured via WordPress filters. Add these to your theme's `functions.php` or a custom plugin.
 
 ## Quick Start
 
 ### Using the Webhook (Recommended)
 
-**Step 1:** Enable the webhook and get your Bearer token from **PMPro > Magic Levels** admin page.
+**Step 1:** Get your Bearer token from **PMPro > Magic Levels** admin page.
 
 > **Note:** Currently one Bearer token per site. Use the same token for all integrations.
 
@@ -164,10 +168,6 @@ The plugin consists of four main classes:
 - **Cache** - Manages the three-tier caching system
 - **Webhook Handler** - Provides REST API endpoint
 
-## Configuration
-
-All settings are configured via WordPress filters. Add these to your theme's `functions.php` or a custom plugin.
-
 ### Complete Configuration Example
 
 ```php
@@ -208,9 +208,11 @@ add_filter('pmpro_magic_levels_cache_method', fn() => 'transient');
 
 **📖 See [filters.md](docs/filters.md) for complete filter reference with all 20+ available options.**
 
-## Usage Examples
+# Usage
 
 **Note:** All REST API examples require Bearer token authentication. Get your token from PMPro > Magic Levels admin page and replace `YOUR_TOKEN_FROM_ADMIN` in the examples below.
+
+## Usage Examples
 
 ### Example 1: Custom HTML Form
 
@@ -543,7 +545,6 @@ You can then build your own redirect URL:
 - `daily_limit_exceeded` - Daily limit reached
 - `invalid_token` - Invalid Bearer token
 - `missing_authorization` - Missing Authorization header
-- `webhook_disabled` - Webhook endpoint is disabled
 - `level_creation_failed` - Database error
 - `invalid_content_protection` - Content protection parameter is not an array
 - `invalid_category_id` - Category ID is invalid
@@ -624,6 +625,8 @@ Array
     [code] => price_below_minimum
 )
 ```
+
+# FAQ
 
 ## Troubleshooting
 
