@@ -46,7 +46,7 @@ class PMPRO_Magic_Levels_Webhook_Handler
 
 		register_rest_route(
 			'pmpro-magic-levels/v1',
-			'/process',
+			'/create-level',
 			array(
 				'methods' => 'POST',
 				'callback' => array(__CLASS__, 'process_request'),
@@ -65,28 +65,6 @@ class PMPRO_Magic_Levels_Webhook_Handler
 	 */
 	public static function check_permissions($request)
 	{
-		// Check if webhook is enabled.
-		$webhook_enabled = get_option('pmpro_ml_webhook_enabled', '0');
-
-		if ('1' !== $webhook_enabled) {
-			return new WP_Error(
-				'webhook_disabled',
-				__('Webhook Endpoint is disabled. Enable it in PMPro > Magic Levels settings.', 'pmpro-magic-levels'),
-				array('status' => 403)
-			);
-		}
-
-		// Get stored webhook key.
-		$webhook_key = get_option('pmpro_ml_webhook_key');
-
-		if (empty($webhook_key)) {
-			return new WP_Error(
-				'no_key_configured',
-				__('No security key configured. Generate one in PMPro > Magic Levels settings.', 'pmpro-magic-levels'),
-				array('status' => 500)
-			);
-		}
-
 		// Get Bearer token from Authorization header.
 		$auth_header = $request->get_header('authorization');
 
@@ -110,13 +88,18 @@ class PMPRO_Magic_Levels_Webhook_Handler
 		$provided_token = trim($matches[1]);
 
 		// Verify token using timing-safe comparison.
-		if (!hash_equals($webhook_key, $provided_token)) {
-			return new WP_Error(
-				'invalid_token',
-				__('Invalid bearer token', 'pmpro-magic-levels'),
-				array('status' => 403)
-			);
+		// Check against Token Manager.
+		if (class_exists('PMPRO_Magic_Levels_Token_Manager')) {
+			if (PMPRO_Magic_Levels_Token_Manager::validate_token($provided_token)) {
+				return true;
+			}
 		}
+
+		return new WP_Error(
+			'invalid_token',
+			__('Invalid bearer token', 'pmpro-magic-levels'),
+			array('status' => 403)
+		);
 
 		return true;
 	}

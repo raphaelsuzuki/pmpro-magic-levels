@@ -29,8 +29,9 @@ class PMPRO_Magic_Levels_Admin
 	{
 		add_action('admin_menu', array(__CLASS__, 'add_admin_menu'));
 		add_action('admin_init', array(__CLASS__, 'register_settings'));
-		add_action('admin_post_pmpro_ml_regenerate_key', array(__CLASS__, 'regenerate_webhook_key'));
 		add_action('admin_post_pmpro_ml_test_webhook', array(__CLASS__, 'test_webhook'));
+		add_action('admin_post_pmpro_ml_create_token', array(__CLASS__, 'create_token'));
+		add_action('admin_post_pmpro_ml_revoke_token', array(__CLASS__, 'revoke_token'));
 		add_filter('debug_information', array(__CLASS__, 'add_site_health_info'));
 		add_filter('site_status_tests', array(__CLASS__, 'add_site_health_tests'));
 	}
@@ -81,66 +82,73 @@ class PMPRO_Magic_Levels_Admin
 	public static function register_settings()
 	{
 		register_setting('pmpro_magic_levels', 'pmpro_ml_webhook_enabled');
-		register_setting('pmpro_magic_levels', 'pmpro_ml_webhook_key');
-	}
-
-	/**
-	 * Get or generate webhook key.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return string Webhook key.
-	 */
-	public static function get_webhook_key()
-	{
-		$key = get_option('pmpro_ml_webhook_key');
-
-		if (empty($key)) {
-			$key = self::generate_webhook_key();
-			update_option('pmpro_ml_webhook_key', $key);
-		}
-
-		return $key;
-	}
-
-	/**
-	 * Generate a secure webhook key.
-	 *
-	 * Uses cryptographically secure random bytes.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return string Generated key (64 characters, base64 encoded).
-	 */
-	private static function generate_webhook_key()
-	{
-		// Generate 48 random bytes, base64 encode to get 64 characters.
-		// This is equivalent to: openssl rand -base64 48
-		$random_bytes = random_bytes(48);
-		return base64_encode($random_bytes);
 	}
 
 
 
+
 	/**
-	 * Regenerate webhook key.
+	 * Create a new additional token.
 	 *
-	 * @since 1.0.0
+	 * @since 1.1.0
 	 *
 	 * @return void
 	 */
-	public static function regenerate_webhook_key()
+	public static function create_token()
 	{
-		check_admin_referer('pmpro_ml_regenerate_key');
+		check_admin_referer('pmpro_ml_create_token');
 
 		if (!current_user_can('manage_options')) {
-			wp_die('Unauthorized');
+			wp_die(esc_html__('Unauthorized', 'pmpro-magic-levels'));
 		}
 
-		$new_key = self::generate_webhook_key();
-		update_option('pmpro_ml_webhook_key', $new_key);
+		$name = isset($_POST['token_name']) ? sanitize_text_field($_POST['token_name']) : '';
 
-		wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&regenerated=1'));
+		if (empty($name)) {
+			wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_error=' . urlencode(__('Token name is required', 'pmpro-magic-levels'))));
+			exit;
+		}
+
+		if (class_exists('PMPRO_Magic_Levels_Token_Manager')) {
+			$result = PMPRO_Magic_Levels_Token_Manager::create_token($name);
+
+			if (is_wp_error($result)) {
+				wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_error=' . urlencode($result->get_error_message())));
+			} else {
+				// Redirect with the fresh token to show once.
+				set_transient('pmpro_ml_new_token_' . get_current_user_id(), $result, 60);
+				wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_created=1'));
+			}
+		} else {
+			wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_error=' . urlencode(__('Token Manager not loaded', 'pmpro-magic-levels'))));
+		}
+		exit;
+	}
+
+	/**
+	 * Revoke an additional token.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return void
+	 */
+	public static function revoke_token()
+	{
+		check_admin_referer('pmpro_ml_revoke_token');
+
+		if (!current_user_can('manage_options')) {
+			wp_die(esc_html__('Unauthorized', 'pmpro-magic-levels'));
+		}
+
+		$token_id = isset($_POST['token_id']) ? sanitize_text_field($_POST['token_id']) : '';
+
+		if (class_exists('PMPRO_Magic_Levels_Token_Manager')) {
+			if (PMPRO_Magic_Levels_Token_Manager::revoke_token($token_id)) {
+				wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_revoked=1'));
+			} else {
+				wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_error=' . urlencode(__('Failed to revoke token', 'pmpro-magic-levels'))));
+			}
+		}
 		exit;
 	}
 
@@ -159,13 +167,16 @@ class PMPRO_Magic_Levels_Admin
 			wp_die(esc_html__('Unauthorized', 'pmpro-magic-levels'));
 		}
 
-		// Get webhook key.
-		$webhook_key = self::get_webhook_key();
+		// Generate temporary token for testing.
+		$token_data = PMPRO_Magic_Levels_Token_Manager::create_token('System Self-Test - ' . current_time('mysql'));
 
-		if (empty($webhook_key)) {
-			wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&test_error=' . urlencode(__('No webhook key configured', 'pmpro-magic-levels'))));
+		if (is_wp_error($token_data)) {
+			wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&test_error=' . urlencode($token_data->get_error_message())));
 			exit;
 		}
+
+		$webhook_token = $token_data['token'];
+		$webhook_token_id = $token_data['id'];
 
 		// Generate random test data.
 		$periods = array('Month', 'Year');
@@ -212,10 +223,10 @@ class PMPRO_Magic_Levels_Admin
 
 		// Make HTTP POST request to webhook endpoint.
 		$response = wp_remote_post(
-			rest_url('pmpro-magic-levels/v1/process'),
+			rest_url('pmpro-magic-levels/v1/create-level'),
 			array(
 				'headers' => array(
-					'Authorization' => 'Bearer ' . $webhook_key,
+					'Authorization' => 'Bearer ' . $webhook_token,
 					'Content-Type' => 'application/json',
 				),
 				'body' => wp_json_encode($test_data),
@@ -244,8 +255,12 @@ class PMPRO_Magic_Levels_Admin
 		// Check if level was created.
 		if (isset($result['success']) && $result['success'] && isset($result['level_id'])) {
 			// Redirect to edit the created level.
+			// Revoke the test token.
+			PMPRO_Magic_Levels_Token_Manager::revoke_token($webhook_token_id);
 			wp_redirect(admin_url('admin.php?page=pmpro-membershiplevels&edit=' . $result['level_id'] . '&test_created=1'));
 		} else {
+			// Revoke the test token.
+			PMPRO_Magic_Levels_Token_Manager::revoke_token($webhook_token_id);
 			$error_msg = isset($result['error']) ? $result['error'] : __('Unknown error', 'pmpro-magic-levels');
 			wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&test_error=' . urlencode($error_msg)));
 		}
@@ -283,18 +298,18 @@ class PMPRO_Magic_Levels_Admin
 		}
 
 		$webhook_enabled = get_option('pmpro_ml_webhook_enabled', '0');
-		$webhook_key = get_option('pmpro_ml_webhook_key');
-		$regenerated = isset($_GET['regenerated']) ? true : false;
+		// Removed legacy key fetch.
 		$test_error = isset($_GET['test_error']) ? sanitize_text_field(wp_unslash($_GET['test_error'])) : '';
 		?>
 		<div class="wrap pmpro_admin">
 			<h1><?php esc_html_e('PMPro Magic Levels', 'pmpro-magic-levels'); ?></h1>
 			<hr class="wp-header-end">
 
-			<?php if ($regenerated): ?>
-				<div class="notice notice-warning is-dismissible">
-					<p><strong><?php esc_html_e('Webhook URL regenerated!', 'pmpro-magic-levels'); ?></strong>
-						<?php esc_html_e('The previous URL will no longer work. Update any forms or integrations using the old URL.', 'pmpro-magic-levels'); ?>
+
+			<?php if (isset($_GET['test_success'])): ?>
+				<div class="notice notice-success is-dismissible">
+					<p><strong><?php esc_html_e('Webhook Test Successful!', 'pmpro-magic-levels'); ?></strong>
+						<?php esc_html_e('A test membership level was created. You can safely delete it.', 'pmpro-magic-levels'); ?>
 					</p>
 				</div>
 			<?php endif; ?>
@@ -306,116 +321,152 @@ class PMPRO_Magic_Levels_Admin
 				</div>
 			<?php endif; ?>
 
-			<?php if ('1' === $webhook_enabled): ?>
-				<div class="notice notice-info">
-					<p>
-						<strong><?php esc_html_e('Security Recommendation:', 'pmpro-magic-levels'); ?></strong>
-						<?php esc_html_e('For production sites, we recommend implementing rate limiting at your CDN or proxy level (Cloudflare, BunnyCDN, etc.) for better performance and security. The plugin includes basic rate limiting, but external solutions provide superior protection.', 'pmpro-magic-levels'); ?>
-						<a href="https://github.com/YOUR_REPO/pmpro-magic-levels/blob/master/docs/security.md" target="_blank">
-							<?php esc_html_e('View security guide →', 'pmpro-magic-levels'); ?>
-						</a>
-					</p>
+			<?php
+			if (isset($_GET['token_created']) && $_GET['token_created']) {
+				$new_token_data = get_transient('pmpro_ml_new_token_' . get_current_user_id());
+				if ($new_token_data) {
+					delete_transient('pmpro_ml_new_token_' . get_current_user_id());
+					?>
+					<div class="notice notice-success is-dismissible">
+						<p><strong><?php esc_html_e('New Token Created!', 'pmpro-magic-levels'); ?></strong></p>
+						<p>
+							<?php esc_html_e('Make sure to copy your personal access token now. You won\'t be able to see it again!', 'pmpro-magic-levels'); ?>
+						</p>
+						<p>
+							<input type="text" readonly value="<?php echo esc_attr($new_token_data['token']); ?>"
+								class="large-text code" onclick="this.select();" style="font-weight: bold; color: #007cba;">
+						</p>
+					</div>
+					<?php
+				}
+			}
+
+			if (isset($_GET['token_revoked'])) {
+				?>
+				<div class="notice notice-success is-dismissible">
+					<p><?php esc_html_e('Token revoked successfully.', 'pmpro-magic-levels'); ?></p>
 				</div>
-			<?php endif; ?>
+				<?php
+			}
 
-			<form method="post" action="">
-				<?php wp_nonce_field('pmpro_ml_settings'); ?>
+			if (isset($_GET['token_error'])) {
+				?>
+				<div class="notice notice-error is-dismissible">
+					<p><?php echo esc_html(urldecode($_GET['token_error'])); ?></p>
+				</div>
+				<?php
+			}
+			?>
 
-				<!-- Webhook Endpoint Section -->
+
+			<?php if (class_exists('PMPRO_Magic_Levels_Token_Manager')): ?>
+				<!-- Token Manager Section -->
 				<div class="pmpro_section" data-visibility="shown" data-activated="true">
 					<div class="pmpro_section_toggle">
 						<button class="pmpro_section-toggle-button" type="button" aria-expanded="true">
 							<span class="dashicons dashicons-arrow-up-alt2"></span>
-							<?php esc_html_e('Webhook Endpoint', 'pmpro-magic-levels'); ?>
+							<?php esc_html_e('Access Tokens', 'pmpro-magic-levels'); ?>
 						</button>
 					</div>
 					<div class="pmpro_section_inside">
-						<p><?php esc_html_e('The Webhook Endpoint allows external services and forms to create membership levels via HTTP POST requests. All requests are secured with Bearer token authentication using a cryptographically secure 64-character key.', 'pmpro-magic-levels'); ?>
+						<p>
+							<?php esc_html_e('The Webhook Endpoint allows external services and forms to create membership levels via HTTP POST requests. All requests are secured with Bearer token authentication using a cryptographically secure 64-character key.', 'pmpro-magic-levels'); ?>
 						</p>
 
-						<table class="form-table">
-							<tr>
-								<th scope="row"><?php esc_html_e('Enable Webhook Endpoint', 'pmpro-magic-levels'); ?></th>
-								<td>
-									<label>
-										<input type="checkbox" name="pmpro_ml_webhook_enabled" value="1" <?php checked($webhook_enabled, '1'); ?>>
-										<?php esc_html_e('Enable webhook endpoint', 'pmpro-magic-levels'); ?>
-									</label>
-									<p class="description">
-										<?php esc_html_e('When disabled, the webhook URL will return a 403 error.', 'pmpro-magic-levels'); ?>
-									</p>
-								</td>
-							</tr>
+						<div class="notice notice-info inline">
+							<p>
+								<strong><?php esc_html_e('Webhook Endpoint URL:', 'pmpro-magic-levels'); ?></strong><br>
+								<input type="text" readonly
+									value="<?php echo esc_url(rest_url('pmpro-magic-levels/v1/create-level')); ?>"
+									class="large-text code" onclick="this.select();">
+							</p>
+						</div>
+						<p><?php esc_html_e('Create specific tokens for different integrations (e.g., Zapier, Custom Forms). You can revoke these individually.', 'pmpro-magic-levels'); ?>
+						</p>
 
-							<?php if ('1' === $webhook_enabled): ?>
-								<tr>
-									<th scope="row"><?php esc_html_e('Webhook URL', 'pmpro-magic-levels'); ?></th>
-									<td>
-										<input type="text" readonly
-											value="<?php echo esc_attr(rest_url('pmpro-magic-levels/v1/process')); ?>"
-											class="large-text code" onclick="this.select();">
-										<p class="description">
-											<?php esc_html_e('Send POST requests to this endpoint with Bearer token authentication.', 'pmpro-magic-levels'); ?>
-										</p>
-									</td>
-								</tr>
+						<?php
+						$tokens = PMPRO_Magic_Levels_Token_Manager::get_tokens();
+						?>
 
+						<table class="widefat striped">
+							<thead>
 								<tr>
-									<th scope="row"><?php esc_html_e('Bearer Token', 'pmpro-magic-levels'); ?></th>
-									<td>
-										<input type="text" readonly value="<?php echo esc_attr(self::get_webhook_key()); ?>"
-											class="large-text code" onclick="this.select();" style="font-family: monospace;">
-										<p class="description">
-											<?php esc_html_e('Token only (for curl or code integrations)', 'pmpro-magic-levels'); ?>
-										</p>
-									</td>
+									<th><?php esc_html_e('Name', 'pmpro-magic-levels'); ?></th>
+									<th><?php esc_html_e('Created', 'pmpro-magic-levels'); ?></th>
+									<th><?php esc_html_e('Last Used', 'pmpro-magic-levels'); ?></th>
+									<th><?php esc_html_e('Actions', 'pmpro-magic-levels'); ?></th>
 								</tr>
-
-								<tr>
-									<th scope="row"><?php esc_html_e('Authorization Header Value', 'pmpro-magic-levels'); ?></th>
-									<td>
-										<input type="text" readonly value="Bearer <?php echo esc_attr(self::get_webhook_key()); ?>"
-											class="large-text code" onclick="this.select();" style="font-family: monospace;">
-										<p class="description">
-											<?php esc_html_e('Full header value (for form plugins).', 'pmpro-magic-levels'); ?>
-											<strong><?php esc_html_e('This is the same token as above, just formatted differently.', 'pmpro-magic-levels'); ?></strong>
-										</p>
-									</td>
-								</tr>
-
-								<tr>
-									<th scope="row"><?php esc_html_e('Regenerate Security Key', 'pmpro-magic-levels'); ?></th>
-									<td>
-										<a href="<?php echo wp_nonce_url(admin_url('admin-post.php?action=pmpro_ml_regenerate_key'), 'pmpro_ml_regenerate_key'); ?>"
-											class="button"
-											onclick="return confirm('<?php echo esc_js(__('Are you sure? The current webhook URL will stop working and you will need to update all integrations.', 'pmpro-magic-levels')); ?>');"><?php esc_html_e('Regenerate Key', 'pmpro-magic-levels'); ?></a>
-										<p class="description">
-											<?php esc_html_e('Generate a new security key. This will invalidate the current webhook URL.', 'pmpro-magic-levels'); ?>
-										</p>
-									</td>
-								</tr>
-
-								<tr>
-									<th scope="row"><?php esc_html_e('Test Webhook', 'pmpro-magic-levels'); ?></th>
-									<td>
-										<a href="<?php echo wp_nonce_url(admin_url('admin-post.php?action=pmpro_ml_test_webhook'), 'pmpro_ml_test_webhook'); ?>"
-											class="button button-secondary"><?php esc_html_e('Create Test Level', 'pmpro-magic-levels'); ?></a>
-										<p class="description">
-											<?php esc_html_e('Creates a test membership level with random data. You\'ll be redirected to edit the created level.', 'pmpro-magic-levels'); ?>
-										</p>
-									</td>
-								</tr>
-							<?php endif; ?>
+							</thead>
+							<tbody>
+								<?php if (empty($tokens)): ?>
+									<tr>
+										<td colspan="4"><?php esc_html_e('No additional tokens found.', 'pmpro-magic-levels'); ?></td>
+									</tr>
+								<?php else: ?>
+									<?php foreach ($tokens as $id => $token): ?>
+										<tr>
+											<td><strong><?php echo esc_html($token['name']); ?></strong></td>
+											<td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($token['created']))); ?>
+											</td>
+											<td>
+												<?php
+												if (!empty($token['last_used'])) {
+													echo esc_html(human_time_diff(strtotime($token['last_used']), current_time('timestamp')) . ' ago');
+												} else {
+													echo esc_html__('Never', 'pmpro-magic-levels');
+												}
+												?>
+											</td>
+											<td>
+												<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"
+													style="display:inline;">
+													<input type="hidden" name="action" value="pmpro_ml_revoke_token">
+													<input type="hidden" name="token_id" value="<?php echo esc_attr($id); ?>">
+													<?php wp_nonce_field('pmpro_ml_revoke_token'); ?>
+													<button type="submit" class="button-link button-link-delete"
+														style="color: #a00; text-decoration: none;"
+														onclick="return confirm('<?php echo esc_js(__('Are you sure you want to revoke this token?', 'pmpro-magic-levels')); ?>');">
+														<?php esc_html_e('Revoke', 'pmpro-magic-levels'); ?>
+													</button>
+												</form>
+											</td>
+										</tr>
+									<?php endforeach; ?>
+								<?php endif; ?>
+							</tbody>
 						</table>
-
-						<p class="submit">
-							<input type="submit" name="pmpro_ml_save_settings" class="button button-primary"
-								value="<?php esc_attr_e('Save Settings', 'pmpro-magic-levels'); ?>">
+						<p class="description">
+							<strong><?php esc_html_e('Note:', 'pmpro-magic-levels'); ?></strong>
+							<?php esc_html_e('Authentication header required: ', 'pmpro-magic-levels'); ?>
+							<code>Authorization: Bearer &lt;token&gt;</code>
 						</p>
+
+						<h4><?php esc_html_e('Create New Token', 'pmpro-magic-levels'); ?></h4>
+						<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="pmpro_form">
+							<input type="hidden" name="action" value="pmpro_ml_create_token">
+							<?php wp_nonce_field('pmpro_ml_create_token'); ?>
+							<input type="text" name="token_name"
+								placeholder="<?php esc_attr_e('e.g. Zapier Integration', 'pmpro-magic-levels'); ?>" required
+								class="regular-text">
+							<button type="submit"
+								class="button button-secondary"><?php esc_html_e('Generate Token', 'pmpro-magic-levels'); ?></button>
+						</form>
+
+						<h4><?php esc_html_e('Test Webhook', 'pmpro-magic-levels'); ?></h4>
+						<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+							<input type="hidden" name="action" value="pmpro_ml_test_webhook">
+							<?php wp_nonce_field('pmpro_ml_test_webhook'); ?>
+							<p class="description">
+								<?php esc_html_e('Performs a genuine HTTP request to verify API reachability and Authorization headers by creating a test level with all parameters using a temporary token.', 'pmpro-magic-levels'); ?>
+							</p>
+
+							<button type="submit"
+								class="button button-secondary"><?php esc_html_e('Run System Self-Test', 'pmpro-magic-levels'); ?></button>
+						</form>
+
 					</div>
 				</div>
-
-			</form>
+			<?php endif; ?>
 
 			<!-- API Parameters Section -->
 			<div class="pmpro_section" data-visibility="shown" data-activated="true">
@@ -460,7 +511,8 @@ class PMPRO_Magic_Levels_Admin
 								</td>
 								<td>string</td>
 								<td>Optional</td>
-								<td><?php esc_html_e('Level description. Example: "Access to premium content and features"', 'pmpro-magic-levels'); ?></td>
+								<td><?php esc_html_e('Level description. Example: "Access to premium content and features"', 'pmpro-magic-levels'); ?>
+								</td>
 							</tr>
 							<tr>
 								<td><input type="text" readonly value="confirmation" onclick="this.select();"
@@ -468,7 +520,8 @@ class PMPRO_Magic_Levels_Admin
 								</td>
 								<td>string</td>
 								<td>Optional</td>
-								<td><?php esc_html_e('Confirmation message shown after checkout. Example: "Thank you for joining!"', 'pmpro-magic-levels'); ?></td>
+								<td><?php esc_html_e('Confirmation message shown after checkout. Example: "Thank you for joining!"', 'pmpro-magic-levels'); ?>
+								</td>
 							</tr>
 							<tr>
 								<td><input type="text" readonly value="account_message" onclick="this.select();"
@@ -509,7 +562,8 @@ class PMPRO_Magic_Levels_Admin
 								</td>
 								<td>integer</td>
 								<td>Defaults to 0</td>
-								<td><?php esc_html_e('Billing cycle number. Example: 1 (bill every 1 period), 3 (bill every 3 periods)', 'pmpro-magic-levels'); ?></td>
+								<td><?php esc_html_e('Billing cycle number. Example: 1 (bill every 1 period), 3 (bill every 3 periods)', 'pmpro-magic-levels'); ?>
+								</td>
 							</tr>
 							<tr>
 								<td><input type="text" readonly value="cycle_period" onclick="this.select();"
@@ -535,7 +589,8 @@ class PMPRO_Magic_Levels_Admin
 								</td>
 								<td>float</td>
 								<td>Defaults to 0</td>
-								<td><?php esc_html_e('Trial period amount. Example: 1.00 (charge $1 for trial)', 'pmpro-magic-levels'); ?></td>
+								<td><?php esc_html_e('Trial period amount. Example: 1.00 (charge $1 for trial)', 'pmpro-magic-levels'); ?>
+								</td>
 							</tr>
 							<tr>
 								<td><input type="text" readonly value="trial_limit" onclick="this.select();"
@@ -543,7 +598,8 @@ class PMPRO_Magic_Levels_Admin
 								</td>
 								<td>integer</td>
 								<td>Defaults to 0</td>
-								<td><?php esc_html_e('Trial period duration in billing cycles. Example: 1 (1 month trial if cycle_period is Month)', 'pmpro-magic-levels'); ?></td>
+								<td><?php esc_html_e('Trial period duration in billing cycles. Example: 1 (1 month trial if cycle_period is Month)', 'pmpro-magic-levels'); ?>
+								</td>
 							</tr>
 
 							<!-- Expiration Settings -->
@@ -558,7 +614,8 @@ class PMPRO_Magic_Levels_Admin
 								</td>
 								<td>integer</td>
 								<td>Defaults to 0</td>
-								<td><?php esc_html_e('Expiration duration. Example: 12 (expires after 12 periods). 0 = no expiration', 'pmpro-magic-levels'); ?></td>
+								<td><?php esc_html_e('Expiration duration. Example: 12 (expires after 12 periods). 0 = no expiration', 'pmpro-magic-levels'); ?>
+								</td>
 							</tr>
 							<tr>
 								<td><input type="text" readonly value="expiration_period" onclick="this.select();"
@@ -721,19 +778,12 @@ class PMPRO_Magic_Levels_Admin
 	 */
 	public static function add_site_health_info($info)
 	{
-		$webhook_enabled = get_option('pmpro_ml_webhook_enabled', '0');
-		$webhook_key = get_option('pmpro_ml_webhook_key');
-
 		$info['pmpro-magic-levels'] = array(
 			'label' => __('PMPro Magic Levels', 'pmpro-magic-levels'),
 			'fields' => array(
-				'webhook_status' => array(
-					'label' => __('Webhook Endpoint', 'pmpro-magic-levels'),
-					'value' => '1' === $webhook_enabled ? __('Enabled', 'pmpro-magic-levels') : __('Disabled', 'pmpro-magic-levels'),
-				),
 				'webhook_key_set' => array(
-					'label' => __('Security Key', 'pmpro-magic-levels'),
-					'value' => !empty($webhook_key) ? __('Configured', 'pmpro-magic-levels') : __('Not Set', 'pmpro-magic-levels'),
+					'label' => __('Active Tokens', 'pmpro-magic-levels'),
+					'value' => !empty(PMPRO_Magic_Levels_Token_Manager::get_tokens()) ? count(PMPRO_Magic_Levels_Token_Manager::get_tokens()) . ' ' . __('configured', 'pmpro-magic-levels') : __('No tokens', 'pmpro-magic-levels'),
 				),
 				'rest_api_enabled' => array(
 					'label' => __('REST API', 'pmpro-magic-levels'),
@@ -801,7 +851,7 @@ class PMPRO_Magic_Levels_Admin
 		}
 
 		// Test if REST API is accessible.
-		$response = wp_remote_get(rest_url('pmpro-magic-levels/v1/process'));
+		$response = wp_remote_get(rest_url('pmpro-magic-levels/v1/create-level'));
 
 		if (is_wp_error($response)) {
 			$result['status'] = 'critical';
@@ -812,8 +862,9 @@ class PMPRO_Magic_Levels_Admin
 
 		$status_code = wp_remote_retrieve_response_code($response);
 
-		// 403 is expected if webhook is disabled or no key provided.
-		if (403 === $status_code || 405 === $status_code) {
+		// 405 is expected (Method Not Allowed) since we are sending GET but route expects POST.
+		// 401 is expected if the route requires authentication even for GET (some security plugins).
+		if (401 === $status_code || 403 === $status_code || 405 === $status_code) {
 			$result['description'] = sprintf('<p>%s</p>', __('The REST API endpoint is accessible and properly secured.', 'pmpro-magic-levels'));
 			return $result;
 		}
@@ -830,9 +881,6 @@ class PMPRO_Magic_Levels_Admin
 	 */
 	public static function test_webhook_config()
 	{
-		$webhook_enabled = get_option('pmpro_ml_webhook_enabled', '0');
-		$webhook_key = get_option('pmpro_ml_webhook_key');
-
 		$result = array(
 			'label' => __('Webhook Endpoint is configured', 'pmpro-magic-levels'),
 			'status' => 'good',
@@ -840,21 +888,14 @@ class PMPRO_Magic_Levels_Admin
 				'label' => __('PMPro Magic Levels', 'pmpro-magic-levels'),
 				'color' => 'blue',
 			),
-			'description' => sprintf('<p>%s</p>', __('The Webhook Endpoint is properly configured and ready to use.', 'pmpro-magic-levels')),
+			'description' => sprintf('<p>%s</p>', __('The Webhook Endpoint is properly configured with access tokens.', 'pmpro-magic-levels')),
 			'test' => 'pmpro_magic_levels_webhook',
 		);
 
-		if ('1' !== $webhook_enabled) {
+		if (empty(PMPRO_Magic_Levels_Token_Manager::get_tokens())) {
 			$result['status'] = 'recommended';
-			$result['label'] = __('Webhook Endpoint is disabled', 'pmpro-magic-levels');
-			$result['description'] = sprintf('<p>%s <a href="' . admin_url('admin.php?page=pmpro-magic-levels') . '">%s</a></p>', __('The Webhook Endpoint is currently disabled. If you plan to use external forms or services, enable it in', 'pmpro-magic-levels'), __('PMPro > Magic Levels', 'pmpro-magic-levels'));
-			return $result;
-		}
-
-		if (empty($webhook_key)) {
-			$result['status'] = 'critical';
-			$result['label'] = __('Webhook security key is missing', 'pmpro-magic-levels');
-			$result['description'] = sprintf('<p>%s <a href="' . admin_url('admin.php?page=pmpro-magic-levels') . '">%s</a></p>', __('The webhook is enabled but no security key is configured. Visit', 'pmpro-magic-levels'), __('PMPro > Magic Levels to generate a key.', 'pmpro-magic-levels'));
+			$result['label'] = __('No access tokens configured', 'pmpro-magic-levels');
+			$result['description'] = sprintf('<p>%s <a href="' . admin_url('admin.php?page=pmpro-magic-levels') . '">%s</a></p>', __('The Webhook Endpoint is active but no access tokens are configured. Visit', 'pmpro-magic-levels'), __('PMPro > Magic Levels to generate a token.', 'pmpro-magic-levels'));
 			return $result;
 		}
 

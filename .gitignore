@@ -17,6 +17,7 @@ package-lock.json
 .vscode/
 .kiro/
 .idea/
+.qodo/
 *.sublime-project
 *.sublime-workspace
 .DS_Store
