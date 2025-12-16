@@ -57,7 +57,7 @@ add_filter('pmpro_magic_levels_rate_limit', function() {
    - **Rule name:** PMPro Magic Levels Rate Limit
    - **Field:** URI Path
    - **Operator:** equals
-   - **Value:** `/wp-json/pmpro-magic-levels/v1/process`
+   - **Value:** `/wp-json/pmpro-magic-levels/v1/create-level`
    - **Then:** Rate Limit
    - **Requests:** 100 per minute
    - **Duration:** 1 hour
@@ -68,7 +68,7 @@ add_filter('pmpro_magic_levels_rate_limit', function() {
 More advanced options available:
 
 ```
-(http.request.uri.path eq "/wp-json/pmpro-magic-levels/v1/process")
+(http.request.uri.path eq "/wp-json/pmpro-magic-levels/v1/create-level")
 ```
 
 **Rate Limiting:**
@@ -89,7 +89,7 @@ async function handleRequest(request) {
   const url = new URL(request.url)
   
   // Only apply to webhook endpoint
-  if (url.pathname === '/wp-json/pmpro-magic-levels/v1/process') {
+  if (url.pathname === '/wp-json/pmpro-magic-levels/v1/create-level') {
     // Check Authorization header
     const auth = request.headers.get('Authorization')
     if (!auth || !auth.startsWith('Bearer ')) {
@@ -114,7 +114,7 @@ async function handleRequest(request) {
 3. Add new rule:
 
 ```
-If Request URL contains /wp-json/pmpro-magic-levels/v1/process
+If Request URL contains /wp-json/pmpro-magic-levels/v1/create-level
 Then Rate Limit: 100 requests per minute
 Action: Return 429 status code
 ```
@@ -136,7 +136,7 @@ Add to your Nginx configuration:
 limit_req_zone $binary_remote_addr zone=webhook:10m rate=100r/m;
 
 # Apply to webhook endpoint
-location /wp-json/pmpro-magic-levels/v1/process {
+location /wp-json/pmpro-magic-levels/v1/create-level {
     # Allow burst of 20 requests, then enforce rate
     limit_req zone=webhook burst=20 nodelay;
     
@@ -160,7 +160,7 @@ map $http_authorization $bearer_token {
 # Rate limit by token
 limit_req_zone $bearer_token zone=webhook_token:10m rate=100r/m;
 
-location /wp-json/pmpro-magic-levels/v1/process {
+location /wp-json/pmpro-magic-levels/v1/create-level {
     limit_req zone=webhook_token burst=20 nodelay;
     limit_req_status 429;
     try_files $uri $uri/ /index.php?$args;
@@ -174,7 +174,7 @@ location /wp-json/pmpro-magic-levels/v1/process {
 ### Using mod_ratelimit
 
 ```apache
-<Location "/wp-json/pmpro-magic-levels/v1/process">
+<Location "/wp-json/pmpro-magic-levels/v1/create-level">
     # Limit to 400 KB/s (adjust based on your needs)
     SetOutputFilter RATE_LIMIT
     SetEnv rate-limit 400
@@ -206,7 +206,7 @@ Install and configure mod_evasive:
 If hosting on AWS, use API Gateway in front of your WordPress site:
 
 1. Create REST API in API Gateway
-2. Create resource for `/process`
+2. Create resource for `/create-level`
 3. Configure **Usage Plans**:
    - Rate: 100 requests per second
    - Burst: 200 requests
@@ -226,8 +226,8 @@ Monitor WordPress logs and ban abusive IPs:
 
 ```ini
 [Definition]
-failregex = ^<HOST> .* "POST /wp-json/pmpro-magic-levels/v1/process HTTP.*" 429
-            ^<HOST> .* "POST /wp-json/pmpro-magic-levels/v1/process HTTP.*" 403
+failregex = ^<HOST> .* "POST /wp-json/pmpro-magic-levels/v1/create-level HTTP.*" 429
+            ^<HOST> .* "POST /wp-json/pmpro-magic-levels/v1/create-level HTTP.*" 403
 ignoreregex =
 ```
 
@@ -261,14 +261,14 @@ For internal integrations, whitelist specific IPs:
 
 Create firewall rule:
 ```
-(http.request.uri.path eq "/wp-json/pmpro-magic-levels/v1/process" and ip.src ne YOUR_IP)
+(http.request.uri.path eq "/wp-json/pmpro-magic-levels/v1/create-level" and ip.src ne YOUR_IP)
 Then: Block
 ```
 
 ### Nginx
 
 ```nginx
-location /wp-json/pmpro-magic-levels/v1/process {
+location /wp-json/pmpro-magic-levels/v1/create-level {
     allow YOUR_IP;
     deny all;
     
@@ -279,7 +279,7 @@ location /wp-json/pmpro-magic-levels/v1/process {
 ### Apache
 
 ```apache
-<Location "/wp-json/pmpro-magic-levels/v1/process">
+<Location "/wp-json/pmpro-magic-levels/v1/create-level">
     Require ip YOUR_IP
 </Location>
 ```
@@ -288,7 +288,7 @@ location /wp-json/pmpro-magic-levels/v1/process {
 
 ```php
 add_filter('rest_pre_dispatch', function($result, $server, $request) {
-    if ($request->get_route() === '/pmpro-magic-levels/v1/process') {
+    if ($request->get_route() === '/pmpro-magic-levels/v1/create-level') {
         $allowed_ips = array('1.2.3.4', '5.6.7.8');
         $client_ip = $_SERVER['REMOTE_ADDR'];
         
@@ -361,7 +361,7 @@ Make.com has built-in rate limiting per scenario. No configuration needed.
 
 Monitor webhook traffic:
 1. Go to **Analytics & Logs**
-2. Filter by `/wp-json/pmpro-magic-levels/v1/process`
+2. Filter by `/wp-json/pmpro-magic-levels/v1/create-level`
 3. Set up alerts for unusual traffic
 
 ### WordPress Logging
@@ -370,7 +370,7 @@ Log all webhook requests:
 
 ```php
 add_action('rest_pre_dispatch', function($result, $server, $request) {
-    if ($request->get_route() === '/pmpro-magic-levels/v1/process') {
+    if ($request->get_route() === '/pmpro-magic-levels/v1/create-level') {
         error_log(sprintf(
             'PMPro Magic Levels webhook: IP=%s, Token=%s, Time=%s',
             $_SERVER['REMOTE_ADDR'],

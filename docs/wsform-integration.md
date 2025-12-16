@@ -8,7 +8,7 @@ This guide provides step-by-step instructions for integrating **Paid Memberships
 2.  Click on the **Actions** tab.
 3.  Add a new action and select **Webhook**.
 4.  Configure the webhook settings:
-    *   **URL**: `https://yoursite.com/wp-json/pmpro-magic-levels/v1/process`
+    *   **URL**: `https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level`
     *   **Method**: `POST`
     *   **Content-Type**: `application/json`
     *   **Headers**: Add the following header for authentication:

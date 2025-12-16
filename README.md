@@ -67,7 +67,7 @@ All settings are configured via WordPress filters. Add these to your theme's `fu
 **Step 2:** Send a POST request with your level data:
 
 ```bash
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN_FROM_ADMIN" \
   -d '{
@@ -95,7 +95,7 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
 ### Using JavaScript
 
 ```javascript
-fetch('/wp-json/pmpro-magic-levels/v1/process', {
+fetch('/wp-json/pmpro-magic-levels/v1/create-level', {
     method: 'POST',
     headers: { 
         'Content-Type': 'application/json',
@@ -250,7 +250,7 @@ jQuery(document).ready(function($) {
         };
         
         $.ajax({
-            url: '/wp-json/pmpro-magic-levels/v1/process',
+            url: '/wp-json/pmpro-magic-levels/v1/create-level',
             method: 'POST',
             headers: {
                 'Authorization': 'Bearer YOUR_TOKEN_FROM_ADMIN'
@@ -366,7 +366,7 @@ jQuery(document).ready(function($) {
         var price = calculatePrice();
         
         $.ajax({
-            url: '/wp-json/pmpro-magic-levels/v1/process',
+            url: '/wp-json/pmpro-magic-levels/v1/create-level',
             method: 'POST',
             headers: {
                 'Authorization': 'Bearer YOUR_TOKEN_FROM_ADMIN'
@@ -405,7 +405,7 @@ var formData = {
     protected_posts: [123, 456]     // Protect posts with IDs 123 and 456
 };
 
-fetch('/wp-json/pmpro-magic-levels/v1/process', {
+fetch('/wp-json/pmpro-magic-levels/v1/create-level', {
     method: 'POST',
     headers: { 
         'Content-Type': 'application/json',
@@ -455,7 +455,7 @@ var formData = {
     cycle_number: 1
 };
 
-fetch('/wp-json/pmpro-magic-levels/v1/process', {
+fetch('/wp-json/pmpro-magic-levels/v1/create-level', {
     method: 'POST',
     headers: { 
         'Content-Type': 'application/json',

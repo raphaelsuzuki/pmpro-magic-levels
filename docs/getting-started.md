@@ -30,7 +30,7 @@ PMPro Magic Levels allows you to dynamically create membership levels from form 
 Use the webhook endpoint to create or find levels:
 
 ```bash
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN_FROM_ADMIN" \
   -d '{

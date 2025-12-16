@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: PMPro Magic Levels
- * Plugin URI: https://github.com/yourusername/pmpro-magic-levels
+ * Plugin URI: https://github.com/raphaelsuzuki/pmpro-magic-levels
  * Description: Create or find membership levels from form submissions and redirect to checkout
  * Version: 1.0.0
- * Author: Your Name
- * Author URI: https://yourwebsite.com
+ * Author: Raphael Suzuki
+ * Author URI: https://github.com/raphaelsuzuki/pmpro-magic-levels
  * Text Domain: pmpro-magic-levels
  * Domain Path: /languages
  * Requires at least: 5.0

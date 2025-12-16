@@ -74,7 +74,7 @@ This is PMPro's standard behavior - users need ANY ONE of the assigned levels to
 ## Complete Example
 
 ```bash
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -101,7 +101,7 @@ const levelData = {
     protected_posts: [123, 456]
 };
 
-fetch('/wp-json/pmpro-magic-levels/v1/process', {
+fetch('/wp-json/pmpro-magic-levels/v1/create-level', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
@@ -316,7 +316,7 @@ const selectedCategories = [5, 12, 18];
 const pricePerCategory = 10;
 const totalPrice = selectedCategories.length * pricePerCategory;
 
-fetch('/wp-json/pmpro-magic-levels/v1/process', {
+fetch('/wp-json/pmpro-magic-levels/v1/create-level', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
