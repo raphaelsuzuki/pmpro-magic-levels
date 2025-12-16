@@ -223,7 +223,7 @@ class PMPRO_Magic_Levels_Admin
 
 		// Make HTTP POST request to webhook endpoint.
 		$response = wp_remote_post(
-			rest_url('pmpro-magic-levels/v1/create-level'),
+			rest_url('pmpro-magic-levels/v1/process'),
 			array(
 				'headers' => array(
 					'Authorization' => 'Bearer ' . $webhook_token,
@@ -377,7 +377,7 @@ class PMPRO_Magic_Levels_Admin
 							<p>
 								<strong><?php esc_html_e('Webhook Endpoint URL:', 'pmpro-magic-levels'); ?></strong><br>
 								<input type="text" readonly
-									value="<?php echo esc_url(rest_url('pmpro-magic-levels/v1/create-level')); ?>"
+									value="<?php echo esc_url(rest_url('pmpro-magic-levels/v1/process')); ?>"
 									class="large-text code" onclick="this.select();">
 							</p>
 						</div>
@@ -851,7 +851,7 @@ class PMPRO_Magic_Levels_Admin
 		}
 
 		// Test if REST API is accessible.
-		$response = wp_remote_get(rest_url('pmpro-magic-levels/v1/create-level'));
+		$response = wp_remote_get(rest_url('pmpro-magic-levels/v1/process'));
 
 		if (is_wp_error($response)) {
 			$result['status'] = 'critical';

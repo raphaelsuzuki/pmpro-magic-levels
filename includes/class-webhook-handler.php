@@ -46,7 +46,7 @@ class PMPRO_Magic_Levels_Webhook_Handler
 
 		register_rest_route(
 			'pmpro-magic-levels/v1',
-			'/create-level',
+			'/process',
 			array(
 				'methods' => 'POST',
 				'callback' => array(__CLASS__, 'process_request'),

@@ -420,7 +420,8 @@ add_action('wpforms_process_complete', function($fields, $entry, $form_data) {
     ]);
 
     if ($result['success']) {
-        wp_redirect($result['redirect_url']);
+        $checkout_url = pmpro_url('checkout', '?level=' . $result['level_id']);
+        wp_redirect($checkout_url);
         exit;
     }
 }, 10, 3);
@@ -444,7 +445,8 @@ add_action('gform_after_submission_5', function($entry, $form) {
     ]);
 
     if ($result['success']) {
-        wp_redirect($result['redirect_url']);
+        $checkout_url = pmpro_url('checkout', '?level=' . $result['level_id']);
+        wp_redirect($checkout_url);
         exit;
     }
 }, 10, 2);

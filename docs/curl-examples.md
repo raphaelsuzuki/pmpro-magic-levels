@@ -7,7 +7,7 @@ Replace `yoursite.com` with your actual domain.
 **Important:** All level names must include a group using the format `"GroupName - LevelName"`.
 
 ```bash
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Premium - Gold",
@@ -24,7 +24,7 @@ Use the format: `"GroupName - LevelName"`
 The plugin automatically creates a group called "GroupName" and assigns the level to it.
 
 ```bash
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Basic - Gold",
@@ -39,7 +39,7 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
 
 ```bash
 # Basic - Silver
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Basic - Silver",
@@ -49,7 +49,7 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
   }'
 
 # Basic - Gold
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Basic - Gold",
@@ -59,7 +59,7 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
   }'
 
 # Basic - Platinum
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Basic - Platinum",
@@ -75,7 +75,7 @@ All three levels will be in the "Basic" group.
 
 ```bash
 # Pro group
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Pro - Premium",
@@ -85,7 +85,7 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
   }'
 
 # Enterprise group
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Enterprise - Ultimate",
@@ -98,7 +98,7 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
 ## Yearly Billing
 
 ```bash
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Annual - Premium",
@@ -111,7 +111,7 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
 ## With Trial Period
 
 ```bash
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Trial - Premium",
@@ -127,7 +127,7 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
 ## With Setup Fee (Initial Payment)
 
 ```bash
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Enterprise - Setup",
@@ -142,7 +142,7 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
 ## With Expiration
 
 ```bash
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Limited - 30 Days",
@@ -157,7 +157,7 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
 ## With Billing Limit
 
 ```bash
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Fixed - 12 Months",
@@ -172,7 +172,7 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
 ## Free Level
 
 ```bash
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Free - Basic",
@@ -187,7 +187,7 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
 Get your Bearer token from the admin interface (PMPro > Magic Levels), then include it in the Authorization header:
 
 ```bash
-curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/create-level \
+curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN_FROM_ADMIN_PAGE" \
   -d '{
