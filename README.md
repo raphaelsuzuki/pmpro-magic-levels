@@ -12,43 +12,48 @@ Dynamically create or find membership levels from user interactions, then automa
 - **REST API Integration**: Webhook endpoint with Bearer token authentication for secure form plugin integration
 - **Extensive Validation**: Configurable rules for pricing, naming, rate limiting, and daily limits via WordPress filters
 - **Group-Based Organization**: Automatic level assignment to groups using "GroupName - LevelName" format (PMPro 3.x compatible)
-- **Developer-Friendly**: Works via REST API webhook or direct PHP function calls with comprehensive error handling
+- **Developer-Friendly**: Choice between direct PHP function calls (recommended for internal forms) or REST API webhooks for external tools.
 
 **Perfect for**: Name-your-price forms, custom plan builders, dynamic pricing systems, and any scenario requiring hundreds of membership variations without admin panel clutter.
 
-## Compatible Form Plugins
+## Choosing Your Integration Method
 
-PMPro Magic Levels works via webhook endpoint. Form plugins must be able to send webhook requests AND handle the response for redirect.
-
-**Compatible:**
-- WSForm - Supports webhook response handling and redirect
-
-**Not Compatible:**
-- Contact Form 7 - CF7 webhook plugins (like CF7-to-Zapier) make server-to-server calls and cannot pass webhook responses back to the browser for automatic redirect
-
-## Requirements
-
-- WordPress 5.0+
-- PHP 7.4+
-- Paid Memberships Pro (active)
-
-# Installation
-
-1. Upload the `pmpro-magic-levels` folder to `/wp-content/plugins/`
-2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Configure validation rules via filters (optional - see Configuration below)
-
-## Configuration
-
-All settings are configured via WordPress filters. Add these to your theme's `functions.php` or a custom plugin.
+| Feature | Internal (PHP Function) | External (REST Webhook) |
+| :--- | :--- | :--- |
+| **Recommendation** | **Recommended for WordPress Plugins** | For Workflow Automators or Remote Apps |
+| **Performance** | Instant (Direct call) | Slower (HTTP Request) |
+| **Authentication** | None (Securely inside WP) | Required (Bearer Token) |
+| **Redirection** | Easy & Instant | Hard (Form must handle JSON) |
+| **Use Case** | CF7, Gravity Forms, Custom Code | Workflow Automators, n8n, Mobile Apps, Remote Sites |
 
 ## Quick Start
 
-### Using the Webhook (Recommended)
+### Method A: Internal PHP Integration (Recommended)
+
+If you are using a form plugin (like CF7 or Formidable) on the same site, use the PHP function directly for the best performance and reliability.
+
+```php
+$result = pmpro_magic_levels_process([
+    'name'           => 'Premium - Gold',
+    'billing_amount' => 29.99,
+    'cycle_period'   => 'Month',
+    'cycle_number'   => 1
+]);
+
+if ($result['success']) {
+    // Redirect the user to the generated checkout URL
+    wp_redirect($result['redirect_url']);
+    exit;
+}
+```
+
+### Method B: External Webhook Integration
+
+Use this for external services or if your form plugin natively supports webhook response redirects (like WSForm).
 
 **Step 1:** Generate a bearer token from **PMPro > Magic Levels** admin page.
 
-**Step 2:** Send a POST request with your level data:
+**Step 2:** Send a POST request:
 
 ```bash
 curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
@@ -58,9 +63,7 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
     "name": "Premium - Gold",
     "billing_amount": 29.99,
     "cycle_period": "Month",
-    "cycle_number": 1,
-    "protected_categories": [5, 12],
-    "protected_pages": [42]
+    "cycle_number": 1
   }'
 ```
 
@@ -73,53 +76,6 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
   "level_created": true
 }
 ```
-
-**Step 3:** Redirect user to the `redirect_url` for checkout.
-
-### Using JavaScript
-
-```javascript
-fetch('/wp-json/pmpro-magic-levels/v1/process', {
-    method: 'POST',
-    headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer YOUR_TOKEN_FROM_ADMIN'
-    },
-    body: JSON.stringify({
-        name: 'Premium - Gold',
-        billing_amount: 29.99,
-        cycle_period: 'Month',
-        cycle_number: 1
-    })
-})
-.then(response => response.json())
-.then(data => {
-    if (data.success) {
-        window.location.href = data.redirect_url;
-    }
-});
-```
-
-### Using PHP (Advanced)
-
-For custom WordPress integrations, you can call the function directly:
-
-```php
-$result = pmpro_magic_levels_process([
-    'name' => 'Premium - Gold',
-    'billing_amount' => 29.99,
-    'cycle_period' => 'Month',
-    'cycle_number' => 1
-]);
-
-if ($result['success']) {
-    $checkout_url = pmpro_url('checkout', '?pmpro_level=' . $result['level_id']);
-    wp_redirect($checkout_url);
-    exit;
-}
-```
-
-**Note:** PHP function doesn't require authentication (already in WordPress context).
 
 ## How It Works
 
@@ -245,9 +201,11 @@ add_filter('pmpro_magic_levels_cache_duration', fn() => HOUR_IN_SECONDS);
 add_filter('pmpro_magic_levels_cache_method', fn() => 'transient');
 ```
 
-**📖 See [filters.md](docs/filters.md) for complete filter reference with all 20+ available options.**
+See [filters.md](docs/filters.md) for complete filter reference with all 20+ available options.
 
 ## Error Codes
+
+These codes are returned in the `code` field for both PHP function calls and Webhook JSON responses.
 
 - `missing_required_field` - Missing name
 - `missing_group_separator` - Name doesn't include " - " separator for group
@@ -386,18 +344,19 @@ add_filter('pmpro_magic_levels_cache_method', fn() => 'transient');
 
 ## Documentation
 
-**[Complete Documentation](docs/)** - Full documentation in the `/docs` folder
+**[Complete Documentation](docs/Home.md)** - Full documentation in the `/docs` folder
 
 Quick links:
-- **[Getting Started](docs/getting-started.md)** - Installation and quick start
-- **[Content Protection](docs/content-protection.md)** - Automatically protect content when creating levels
-- **[Security Best Practices](docs/security.md)** - Rate limiting and security recommendations
-- **[WSForm Integration](docs/wsform-integration.md)** - Complete WSForm guide
-- **[Configuration Filters](docs/filters.md)** - Complete filter reference
-- **[cURL Examples](docs/curl-examples.md)** - Test examples
+- **[Getting Started](docs/basics/getting-started.md)** - Installation and quick start
+- **[Content Protection](docs/guides/content-protection.md)** - Automatically protect content when creating levels
+- **[Security Best Practices](docs/guides/security.md)** - Rate limiting and security recommendations
+- **[Form Integration Guide](docs/integrations/overview.md)** - CF7, Formidable, WSForm
+- **[Hooks & Filters](docs/reference/filters.md)** - Complete filter reference
+- **[Webhooks & cURL Examples](docs/integrations/webhooks-and-curl.md)** - Remote API examples
 
 Additional resources:
-- **[Advanced Validation](docs/advanced-validation.md)** - Validation examples cookbook
+- **[Advanced Validation Cookbook](docs/reference/advanced-validation.md)** - Validation examples
+
 
 ## Support
 

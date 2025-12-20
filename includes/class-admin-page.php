@@ -381,7 +381,7 @@ class PMPRO_Magic_Levels_Admin
 									class="large-text code" onclick="this.select();">
 							</p>
 						</div>
-						<p><?php esc_html_e('Create specific tokens for different integrations (e.g., Zapier, Custom Forms). You can revoke these individually.', 'pmpro-magic-levels'); ?>
+						<p><?php esc_html_e('Create specific tokens for different integrations (e.g., Workflow Automators, Custom Forms). You can revoke these individually.', 'pmpro-magic-levels'); ?>
 						</p>
 
 						<?php
@@ -446,7 +446,7 @@ class PMPRO_Magic_Levels_Admin
 							<input type="hidden" name="action" value="pmpro_ml_create_token">
 							<?php wp_nonce_field('pmpro_ml_create_token'); ?>
 							<input type="text" name="token_name"
-								placeholder="<?php esc_attr_e('e.g. Zapier Integration', 'pmpro-magic-levels'); ?>" required
+								placeholder="<?php esc_attr_e('e.g. Workflow Automator', 'pmpro-magic-levels'); ?>" required
 								class="regular-text">
 							<button type="submit"
 								class="button button-secondary"><?php esc_html_e('Generate Token', 'pmpro-magic-levels'); ?></button>

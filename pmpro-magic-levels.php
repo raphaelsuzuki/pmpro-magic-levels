@@ -107,7 +107,7 @@ function pmpro_magic_levels_load_integrations()
 	// Future integrations for form plugins that support webhook response handling.
 
 	// Note: Contact Form 7 is NOT compatible with the webhook approach.
-	// CF7 webhook plugins (like CF7-to-Zapier) make server-to-server calls
+	// CF7 webhook plugins (like CF7-to-External) make server-to-server calls
 	// and cannot pass webhook responses back to the browser for redirect.
 
 	// WSForm integration (future).

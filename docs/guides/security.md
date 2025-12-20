@@ -10,11 +10,11 @@ PMPro Magic Levels includes basic security features, but for production sites we
 
 Implementing rate limiting at your CDN or proxy level provides:
 
-- ✅ **Better Performance** - Blocks requests before they hit WordPress
-- ✅ **Saves Resources** - Reduces server load
-- ✅ **Professional Protection** - DDoS protection, bot detection, etc.
-- ✅ **More Flexible** - Configure different limits per endpoint
-- ✅ **Industry Standard** - Used by Stripe, Twilio, and other major APIs
+- **Better Performance** - Blocks requests before they hit WordPress
+- **Saves Resources** - Reduces server load
+- **Professional Protection** - DDoS protection, bot detection, etc.
+- **More Flexible** - Configure different limits per endpoint
+- **Industry Standard** - Used by Stripe, Twilio, and other major APIs
 
 ### Built-in Rate Limiting
 
@@ -308,14 +308,9 @@ add_filter('rest_pre_dispatch', function($result, $server, $request) {
 
 ## Webhook Services Rate Limiting
 
-### Zapier
+### Automation Tools
 
-Zapier has built-in rate limiting:
-- Free: 100 tasks/month
-- Starter: 750 tasks/month
-- Professional: 2,000+ tasks/month
-
-No additional configuration needed.
+Automation tools like those for workflow orchestration have their own built-in rate limits.
 
 ### n8n (Self-Hosted)
 
@@ -420,7 +415,7 @@ Monitor API endpoint performance and set alerts for:
 
 ### Single Bearer Token
 
-The plugin currently supports **one Bearer token per site**. All integrations (Zapier, n8n, forms, etc.) must use the same token.
+The plugin currently supports **one Bearer token per site**. All integrations (automation tools, n8n, forms, etc.) must use the same token.
 
 **Implications:**
 - Rate limiting is site-wide (100 requests/hour total, not per integration)

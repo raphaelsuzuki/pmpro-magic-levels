@@ -492,11 +492,11 @@ pmpro_update_post_level_restrictions($page_id, []);
 ## Compatibility
 
 Content protection works with:
-- ✅ PMPro 3.0+
-- ✅ All PMPro payment gateways
-- ✅ PMPro Add-ons (Advanced Levels, etc.)
-- ✅ Custom post types (via `protected_posts`)
-- ✅ Categories and tags
+- PMPro 3.0+
+- All PMPro payment gateways
+- PMPro Add-ons (Advanced Levels, etc.)
+- Custom post types (via `protected_posts`)
+- Categories and tags
 
 ## Troubleshooting
 

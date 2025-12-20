@@ -16,18 +16,35 @@ PMPro Magic Levels allows you to dynamically create membership levels from form 
 2. Activate the plugin through the 'Plugins' menu in WordPress
 3. That's it! No configuration needed to get started.
 
-## Quick Start
+### Method 1: Direct PHP Integration (Recommended)
 
-### Step 1: Enable the Webhook
+For internal WordPress integrations (forms on the same site), use the PHP function directly. It is faster, more secure, and allows for instant redirects.
+
+```php
+$result = pmpro_magic_levels_process([
+    'name'           => 'Basic - Gold',
+    'billing_amount' => 29.99,
+    'cycle_period'   => 'Month',
+    'cycle_number'   => 1
+]);
+
+if ($result['success']) {
+    // Redirect the user to the generated checkout URL
+    wp_redirect($result['redirect_url']);
+    exit;
+}
+```
+
+**Note:** The PHP function doesn't require authentication because it runs within your WordPress environment.
+
+### Method 2: External Webhook Integration
+
+Use the webhook endpoint if you are connecting external services (like automation tools) or if you are using an AJAX-based frontend.
 
 1. Go to **PMPro > Magic Levels** in WordPress admin
 2. Check "Enable webhook endpoint"
 3. Copy your Bearer token
-4. Save settings
-
-### Step 2: Send a Request
-
-Use the webhook endpoint to create or find levels:
+4. Send a POST request:
 
 ```bash
 curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
@@ -52,31 +69,6 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
 }
 ```
 
-### Step 3: Redirect to Checkout
-
-Use the `redirect_url` from the response to send users to checkout.
-
-### Alternative: PHP Function (Advanced)
-
-For WordPress integrations, you can use the PHP function directly:
-
-```php
-$result = pmpro_magic_levels_process([
-    'name' => 'Basic - Gold',
-    'billing_amount' => 29.99,
-    'cycle_period' => 'Month',
-    'cycle_number' => 1
-]);
-
-if ($result['success']) {
-    $checkout_url = pmpro_url('checkout', '?pmpro_level=' . $result['level_id']);
-    wp_redirect($checkout_url);
-    exit;
-}
-```
-
-**Note:** PHP function doesn't require authentication.
-
 ## Understanding Groups
 
 **Important:** All level names must include a group using the format `"GroupName - LevelName"`.
@@ -88,5 +80,6 @@ This is required for PMPro 3.x's group-based level management.
 
 ## Next Steps
 
-- [Configuration Options](filters.md) - Customize validation rules
-- [WSForm Integration](wsform-integration.md) - Step-by-step WSForm setup
+- [Configuration Options](../reference/filters.md) - Customize validation rules
+- [WSForm Integration](../integrations/wsform.md) - Step-by-step WSForm setup
+
