@@ -159,9 +159,24 @@ function pmpro_magic_levels_process($level_data)
 		return $result;
 	}
 
+	// Generate redirect URL.
+	$redirect_url = '';
+	if (function_exists('pmpro_url')) {
+		$redirect_url = pmpro_url('checkout', '?pmpro_level=' . $result['level_id']);
+	} else {
+		$checkout_url = apply_filters(
+			'pmpro_magic_levels_checkout_url',
+			home_url('/membership-checkout/'),
+			$result['level_id'],
+			$level_data
+		);
+		$redirect_url = add_query_arg('pmpro_level', $result['level_id'], $checkout_url);
+	}
+
 	return array(
 		'success' => true,
 		'level_id' => $result['level_id'],
+		'redirect_url' => $redirect_url,
 		'level_created' => $result['level_created'],
 		'cached' => isset($result['cached']) ? $result['cached'] : false,
 		'message' => $result['level_created'] ? 'New level created' : 'Existing level found',

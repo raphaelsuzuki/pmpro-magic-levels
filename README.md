@@ -1,34 +1,20 @@
 # PMPro Magic Levels
 
-Dynamically create or find membership levels from form submissions and automatically redirect users to checkout.
+Dynamically create or find membership levels from user interactions, then automatically redirect users to checkout—no manual creation of every membership variation in the admin dashboard. Integrate with your form plugins, page builders, help desk, and workflow automations to give your membership site more power and flexibility. 
 
-# Description
+# Features
 
-PMPro Magic Levels allows you to **dynamically create or find Paid Memberships Pro (PMPro) membership levels on-the-fly** based on user input.
+- **Dynamic Level Creation**: Generate membership levels on-demand from form submissions or API calls without pre-creating every possible variation
+- **Smart Deduplication**: Automatically detects and reuses existing levels with matching parameters to prevent duplicates
+- **High-Performance Caching**: 3-tier caching system (Memory, Transient, DB) ensures lightning-fast lookups (~0-50ms)
+- **Flexible Pricing Options**: Support for one-time payments, recurring subscriptions, trials, billing limits, and expiration dates
+- **Automatic Content Protection**: Instantly protect categories, pages, and posts when creating new levels
+- **REST API Integration**: Webhook endpoint with Bearer token authentication for secure form plugin integration
+- **Extensive Validation**: Configurable rules for pricing, naming, rate limiting, and daily limits via WordPress filters
+- **Group-Based Organization**: Automatic level assignment to groups using "GroupName - LevelName" format (PMPro 3.x compatible)
+- **Developer-Friendly**: Works via REST API webhook or direct PHP function calls with comprehensive error handling
 
-Instead of manually creating every possible membership variation in the admin dashboard, this plugin lets you:
-
-1. **Accept pricing parameters** from a frontend form (Price, Billing Period, Name, etc.)
-2. **Automatically check** if a matching level already exists (to prevent duplicates)
-3. **Create a new level** if one doesn't exist
-4. **Assign** the level to a group (required for PMPro 3.x)
-5. **Redirect the user** instantly to the checkout page for that specific level
-
-**Important:** Level names must use the format `"GroupName - LevelName"` (e.g., "Basic - Gold"). This is required for PMPro's group-based level management.
-
-## Key Use Cases
-
-*   **"Name Your Price" Forms**: Let users donate or pay a custom amount.
-*   **Custom Plan Builders**: Allow users to toggle features that adjust the final price programmatically.
-*   **Dynamic Pricing**: Generate hundreds of price/duration combinations without cluttering your admin panel manually.
-
-## Key Features
-
-*   **Smart Deduplication**: Automatically finds and reuses existing levels if the parameters match exactly.
-*   **High Performance**: Implements a 3-tier caching system (Memory, Transient, DB) to ensure fast lookups (~0-50ms).
-*   **Content Protection**: Automatically protect categories, pages, and posts when creating levels.
-*   **Safety First**: Extensive validation rules (min/max price, name patterns, rate limiting) configurable via WordPress filters.
-*   **Developer Friendly**: Works via REST API webhook or direct PHP function call.
+**Perfect for**: Name-your-price forms, custom plan builders, dynamic pricing systems, and any scenario requiring hundreds of membership variations without admin panel clutter.
 
 ## Compatible Form Plugins
 
@@ -60,9 +46,7 @@ All settings are configured via WordPress filters. Add these to your theme's `fu
 
 ### Using the Webhook (Recommended)
 
-**Step 1:** Get your Bearer token from **PMPro > Magic Levels** admin page.
-
-> **Note:** Currently one Bearer token per site. Use the same token for all integrations.
+**Step 1:** Generate a bearer token from **PMPro > Magic Levels** admin page.
 
 **Step 2:** Send a POST request with your level data:
 
@@ -168,48 +152,6 @@ The plugin consists of four main classes:
 - **Cache** - Manages the three-tier caching system
 - **Webhook Handler** - Provides REST API endpoint
 
-### Complete Configuration Example
-
-```php
-<?php
-// Strict pricing rules
-add_filter('pmpro_magic_levels_price_increment', fn() => 5.00);  // Prices must be $5, $10, $15, etc.
-add_filter('pmpro_magic_levels_min_price', fn() => 10.00);       // Minimum $10
-add_filter('pmpro_magic_levels_max_price', fn() => 200.00);      // Maximum $200
-add_filter('pmpro_magic_levels_allow_free_levels', '__return_false');
-
-// Only monthly and yearly subscriptions
-add_filter('pmpro_magic_levels_allowed_periods', fn() => ['Month', 'Year']);
-add_filter('pmpro_magic_levels_allowed_cycle_numbers', fn() => [1]);
-
-// Name validation
-add_filter('pmpro_magic_levels_min_name_length', fn() => 5);
-add_filter('pmpro_magic_levels_max_name_length', fn() => 50);
-add_filter('pmpro_magic_levels_name_blacklist', fn() => ['test', 'demo', 'free']);
-add_filter('pmpro_magic_levels_name_pattern', fn() => '/^[a-zA-Z0-9\s\-]+$/');
-
-// Rate limiting: 5 requests per hour per IP
-add_filter('pmpro_magic_levels_rate_limit', function() {
-    return [
-        'max_requests' => 5,
-        'time_window' => 3600,
-        'by' => 'ip'  // or 'user'
-    ];
-});
-
-// Daily limits
-add_filter('pmpro_magic_levels_max_levels_per_day', fn() => 20);
-
-// Caching
-add_filter('pmpro_magic_levels_enable_cache', '__return_true');
-add_filter('pmpro_magic_levels_cache_duration', fn() => HOUR_IN_SECONDS);
-add_filter('pmpro_magic_levels_cache_method', fn() => 'transient');
-```
-
-**📖 See [filters.md](docs/filters.md) for complete filter reference with all 20+ available options.**
-
-# Usage
-
 ## Level Parameters
 
 ### Required
@@ -262,6 +204,48 @@ You can then build your own redirect URL:
   "code": "invalid_price_increment"
 }
 ```
+
+## Filters
+
+The plugin provides various filter to configure most of its functionality, like the example below:
+
+```php
+<?php
+// Strict pricing rules
+add_filter('pmpro_magic_levels_price_increment', fn() => 5.00);  // Prices must be $5, $10, $15, etc.
+add_filter('pmpro_magic_levels_min_price', fn() => 10.00);       // Minimum $10
+add_filter('pmpro_magic_levels_max_price', fn() => 200.00);      // Maximum $200
+add_filter('pmpro_magic_levels_allow_free_levels', '__return_false');
+
+// Only monthly and yearly subscriptions
+add_filter('pmpro_magic_levels_allowed_periods', fn() => ['Month', 'Year']);
+add_filter('pmpro_magic_levels_allowed_cycle_numbers', fn() => [1]);
+
+// Name validation
+add_filter('pmpro_magic_levels_min_name_length', fn() => 5);
+add_filter('pmpro_magic_levels_max_name_length', fn() => 50);
+add_filter('pmpro_magic_levels_name_blacklist', fn() => ['test', 'demo', 'free']);
+add_filter('pmpro_magic_levels_name_pattern', fn() => '/^[a-zA-Z0-9\s\-]+$/');
+
+// Rate limiting: 5 requests per hour per IP
+add_filter('pmpro_magic_levels_rate_limit', function() {
+    return [
+        'max_requests' => 5,
+        'time_window' => 3600,
+        'by' => 'ip'  // or 'user'
+    ];
+});
+
+// Daily limits
+add_filter('pmpro_magic_levels_max_levels_per_day', fn() => 20);
+
+// Caching
+add_filter('pmpro_magic_levels_enable_cache', '__return_true');
+add_filter('pmpro_magic_levels_cache_duration', fn() => HOUR_IN_SECONDS);
+add_filter('pmpro_magic_levels_cache_method', fn() => 'transient');
+```
+
+**📖 See [filters.md](docs/filters.md) for complete filter reference with all 20+ available options.**
 
 ## Error Codes
 

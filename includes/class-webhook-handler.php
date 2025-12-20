@@ -128,22 +128,7 @@ class PMPRO_Magic_Levels_Webhook_Handler
 			);
 		}
 
-		// Add redirect_url to successful responses.
-		if ($result['success'] && isset($result['level_id'])) {
-			// Use PMPro's function to get the correct checkout URL.
-			if (function_exists('pmpro_url')) {
-				$result['redirect_url'] = pmpro_url('checkout', '?pmpro_level=' . $result['level_id']);
-			} else {
-				// Fallback.
-				$checkout_url = apply_filters(
-					'pmpro_magic_levels_checkout_url',
-					home_url('/membership-checkout/'),
-					$result['level_id'],
-					$params
-				);
-				$result['redirect_url'] = add_query_arg('pmpro_level', $result['level_id'], $checkout_url);
-			}
-		}
+
 
 		// Return response.
 		if ($result['success']) {
