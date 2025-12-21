@@ -216,6 +216,9 @@ function pmpro_magic_levels_activate()
 			ON {$table_name} (name(50), billing_amount, cycle_period(10), cycle_number)"
 		);
 	}
+
+	// Disable webhook by default on new installations.
+	add_option('pmpro_ml_webhook_enabled', '0');
 }
 register_activation_hook(__FILE__, 'pmpro_magic_levels_activate');
 

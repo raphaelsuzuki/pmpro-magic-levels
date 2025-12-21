@@ -41,6 +41,8 @@ This method uses direct PHP calls. It is recommended for any plugin running on t
 
 ## 2. Remote Webhook Integration (Specialized)
 
+> **Important:** The Webhook Endpoint is **disabled by default** for security. If you need it, enable it in **PMPro > Magic Levels > Settings**.
+
 Use this method **only** if you are connecting from an external service (like automation tools) or if your form plugin natively supports webhook-based redirects (like **WSForm**).
 
 *   **URL:** `https://yoursite.com/wp-json/pmpro-magic-levels/v1/process`

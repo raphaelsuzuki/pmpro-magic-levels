@@ -6,7 +6,7 @@ Thank you for considering contributing to PMPro Magic Levels!
 
 ### Reporting Bugs
 
-1. Check if the bug has already been reported in [Issues](https://github.com/yourusername/pmpro-magic-levels/issues)
+1. Check if the bug has already been reported in [Issues](https://github.com/raphaelsuzuki/pmpro-magic-levels/issues)
 2. If not, create a new issue with:
    - Clear title and description
    - Steps to reproduce
@@ -16,7 +16,7 @@ Thank you for considering contributing to PMPro Magic Levels!
 
 ### Suggesting Features
 
-1. Check [existing feature requests](https://github.com/yourusername/pmpro-magic-levels/issues?q=is%3Aissue+label%3Aenhancement)
+1. Check [existing feature requests](https://github.com/raphaelsuzuki/pmpro-magic-levels/issues?q=is%3Aissue+label%3Aenhancement)
 2. Create a new issue with:
    - Clear use case
    - Expected behavior
@@ -65,7 +65,7 @@ If your contribution adds or changes functionality:
 ## Questions?
 
 Feel free to ask questions in:
-- [GitHub Discussions](https://github.com/yourusername/pmpro-magic-levels/discussions)
-- [Issues](https://github.com/yourusername/pmpro-magic-levels/issues)
+- [GitHub Discussions](https://github.com/raphaelsuzuki/pmpro-magic-levels/discussions)
+- [Issues](https://github.com/raphaelsuzuki/pmpro-magic-levels/issues)
 
 Thank you for contributing! 🎉

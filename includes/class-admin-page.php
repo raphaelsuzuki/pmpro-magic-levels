@@ -167,6 +167,13 @@ class PMPRO_Magic_Levels_Admin
 			wp_die(esc_html__('Unauthorized', 'pmpro-magic-levels'));
 		}
 
+		// Check if webhook is enabled.
+		$is_enabled = get_option('pmpro_ml_webhook_enabled', '0') === '1';
+		if (!apply_filters('pmpro_magic_levels_enable_webhook', $is_enabled)) {
+			wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&test_error=' . urlencode(__('The Webhook Endpoint is currently disabled. Enable it above to run the self-test.', 'pmpro-magic-levels'))));
+			exit;
+		}
+
 		// Generate temporary token for testing.
 		$token_data = PMPRO_Magic_Levels_Token_Manager::create_token('System Self-Test - ' . current_time('mysql'));
 
@@ -373,7 +380,40 @@ class PMPRO_Magic_Levels_Admin
 							<?php esc_html_e('The Webhook Endpoint allows external services and forms to create membership levels via HTTP POST requests. All requests are secured with Bearer token authentication using a cryptographically secure 64-character key.', 'pmpro-magic-levels'); ?>
 						</p>
 
-						<div class="notice notice-info inline">
+						<form method="post" action="" class="pmpro_section_form">
+							<?php wp_nonce_field('pmpro_ml_settings'); ?>
+							<table class="form-table">
+								<tr>
+									<th scope="row"><?php esc_html_e('Enable Webhook', 'pmpro-magic-levels'); ?></th>
+									<td>
+										<label class="pmpro_ml_toggle">
+											<input type="checkbox" name="pmpro_ml_webhook_enabled" value="1" <?php checked($webhook_enabled, '1'); ?>>
+											<span
+												class="pmpro_ml_toggle_label"><?php esc_html_e('Allow external requests via REST API', 'pmpro-magic-levels'); ?></span>
+										</label>
+										<p class="description">
+											<?php esc_html_e('Uncheck this if you are only using the internal PHP integration (Recommended).', 'pmpro-magic-levels'); ?>
+										</p>
+										<br>
+										<input type="submit" name="pmpro_ml_save_settings" class="button button-primary"
+											value="<?php esc_attr_e('Save Webhook Settings', 'pmpro-magic-levels'); ?>">
+
+										<?php if ('1' === $webhook_enabled): ?>
+											<span class="pmpro_tag pmpro_tag-has_icon pmpro_tag-info" style="margin: 0 5px;">
+												<?php esc_html_e('Endpoint Enabled', 'pmpro-magic-levels'); ?>
+											</span>
+										<?php else: ?>
+											<span class="pmpro_tag pmpro_tag-has_icon pmpro_tag-not-installed" style="margin: 0 5px;">
+												<?php esc_html_e('Endpoint Disabled', 'pmpro-magic-levels'); ?>
+											</span>
+										<?php endif; ?>
+									</td>
+								</tr>
+							</table>
+						</form>
+
+						<div class="notice notice-info inline" <?php if ('0' === $webhook_enabled)
+							echo 'style="opacity: 0.5; filter: grayscale(1);"'; ?>>
 							<p>
 								<strong><?php esc_html_e('Webhook Endpoint URL:', 'pmpro-magic-levels'); ?></strong><br>
 								<input type="text" readonly
@@ -473,11 +513,11 @@ class PMPRO_Magic_Levels_Admin
 				<div class="pmpro_section_toggle">
 					<button class="pmpro_section-toggle-button" type="button" aria-expanded="true">
 						<span class="dashicons dashicons-arrow-up-alt2"></span>
-						<?php esc_html_e('API Parameters', 'pmpro-magic-levels'); ?>
+						<?php esc_html_e('Supported Parameters', 'pmpro-magic-levels'); ?>
 					</button>
 				</div>
 				<div class="pmpro_section_inside">
-					<p><?php esc_html_e('Send a POST request to the webhook URL with JSON data containing these parameters:', 'pmpro-magic-levels'); ?>
+					<p><?php esc_html_e('The parameters below are supported by both the internal PHP function pmpro_magic_levels_process() and the external Webhook Endpoint (REST API):', 'pmpro-magic-levels'); ?>
 					</p>
 
 					<table class="widefat striped">
@@ -501,7 +541,7 @@ class PMPRO_Magic_Levels_Admin
 										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 100px;">
 								</td>
 								<td>string</td>
-								<td><strong style="color: #d63638;">Required</strong></td>
+								<td><strong>Required</strong></td>
 								<td><?php esc_html_e('Level name in format "GroupName - LevelName". Example: "Premium - Gold Monthly"', 'pmpro-magic-levels'); ?>
 								</td>
 							</tr>
@@ -544,7 +584,7 @@ class PMPRO_Magic_Levels_Admin
 										style="border: none; background: transparent; font-family: monospace; width: auto; min-width: 150px;">
 								</td>
 								<td>float</td>
-								<td><strong style="color: #d63638;">Required</strong></td>
+								<td><strong>Required</strong></td>
 								<td><?php esc_html_e('Recurring billing amount. Example: 29.99', 'pmpro-magic-levels'); ?>
 								</td>
 							</tr>
@@ -700,65 +740,65 @@ class PMPRO_Magic_Levels_Admin
 					<table class="widefat striped">
 						<thead>
 							<tr>
-								<th style="width: 250px;"><?php esc_html_e('Rule', 'pmpro-magic-levels'); ?></th>
-								<th style="width: 200px;"><?php esc_html_e('Default Value', 'pmpro-magic-levels'); ?></th>
-								<th><?php esc_html_e('Filter', 'pmpro-magic-levels'); ?></th>
+								<th style="width: 350px;"><?php esc_html_e('Filter', 'pmpro-magic-levels'); ?></th>
+								<th style="width: 200px;"><?php esc_html_e('Rule', 'pmpro-magic-levels'); ?></th>
+								<th><?php esc_html_e('Default Value', 'pmpro-magic-levels'); ?></th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr>
-								<td><?php esc_html_e('Allowed Periods', 'pmpro-magic-levels'); ?></td>
-								<td><?php esc_html_e('Day, Week, Month, Year', 'pmpro-magic-levels'); ?></td>
 								<td><input type="text" readonly value="pmpro_magic_levels_allowed_periods"
 										onclick="this.select();"
 										style="border: none; background: transparent; font-family: monospace; width: 100%; min-width: 300px;">
 								</td>
+								<td><?php esc_html_e('Allowed Periods', 'pmpro-magic-levels'); ?></td>
+								<td><?php esc_html_e('Day, Week, Month, Year', 'pmpro-magic-levels'); ?></td>
 							</tr>
 							<tr>
-								<td><?php esc_html_e('Allowed Cycle Numbers', 'pmpro-magic-levels'); ?></td>
-								<td>1, 2, 3, 6, 12</td>
 								<td><input type="text" readonly value="pmpro_magic_levels_allowed_cycle_numbers"
 										onclick="this.select();"
 										style="border: none; background: transparent; font-family: monospace; width: 100%; min-width: 350px;">
 								</td>
+								<td><?php esc_html_e('Allowed Cycle Numbers', 'pmpro-magic-levels'); ?></td>
+								<td>1, 2, 3, 6, 12</td>
 							</tr>
 							<tr>
-								<td><?php esc_html_e('Min Name Length', 'pmpro-magic-levels'); ?></td>
-								<td>1</td>
 								<td><input type="text" readonly value="pmpro_magic_levels_min_name_length"
 										onclick="this.select();"
 										style="border: none; background: transparent; font-family: monospace; width: 100%; min-width: 300px;">
 								</td>
+								<td><?php esc_html_e('Min Name Length', 'pmpro-magic-levels'); ?></td>
+								<td>1</td>
 							</tr>
 							<tr>
-								<td><?php esc_html_e('Max Name Length', 'pmpro-magic-levels'); ?></td>
-								<td>255</td>
 								<td><input type="text" readonly value="pmpro_magic_levels_max_name_length"
 										onclick="this.select();"
 										style="border: none; background: transparent; font-family: monospace; width: 100%; min-width: 300px;">
 								</td>
+								<td><?php esc_html_e('Max Name Length', 'pmpro-magic-levels'); ?></td>
+								<td>255</td>
 							</tr>
 							<tr>
-								<td><?php esc_html_e('Rate Limit (requests/hour)', 'pmpro-magic-levels'); ?></td>
-								<td>100</td>
 								<td><input type="text" readonly value="pmpro_magic_levels_rate_limit" onclick="this.select();"
 										style="border: none; background: transparent; font-family: monospace; width: 100%; min-width: 250px;">
 								</td>
+								<td><?php esc_html_e('Rate Limit (requests/hour)', 'pmpro-magic-levels'); ?></td>
+								<td>100</td>
 							</tr>
 							<tr>
-								<td><?php esc_html_e('Max Levels Per Day', 'pmpro-magic-levels'); ?></td>
-								<td>1000</td>
 								<td><input type="text" readonly value="pmpro_magic_levels_max_levels_per_day"
 										onclick="this.select();"
 										style="border: none; background: transparent; font-family: monospace; width: 100%; min-width: 300px;">
 								</td>
+								<td><?php esc_html_e('Max Levels Per Day', 'pmpro-magic-levels'); ?></td>
+								<td>1000</td>
 							</tr>
 						</tbody>
 					</table>
 
 					<p class="description">
 						<?php esc_html_e('Use these filters in your theme or plugin to customize validation rules.', 'pmpro-magic-levels'); ?>
-						<a href="https://github.com/YOUR_REPO/pmpro-magic-levels/blob/master/docs/README.md#advanced-validation"
+						<a href="https://github.com/raphaelsuzuki/pmpro-magic-levels/blob/master/docs/reference/advanced-validation.md"
 							target="_blank"><?php esc_html_e('View advanced validation examples →', 'pmpro-magic-levels'); ?></a>
 					</p>
 				</div>
@@ -841,6 +881,15 @@ class PMPRO_Magic_Levels_Admin
 			'description' => sprintf('<p>%s</p>', __('The WordPress REST API is properly configured and accessible.', 'pmpro-magic-levels')),
 			'test' => 'pmpro_magic_levels_rest_api',
 		);
+
+		// Check if webhook is enabled.
+		$is_enabled = get_option('pmpro_ml_webhook_enabled', '0') === '1';
+		if (!apply_filters('pmpro_magic_levels_enable_webhook', $is_enabled)) {
+			$result['status'] = 'recommended';
+			$result['label'] = __('REST API Webhook is disabled', 'pmpro-magic-levels');
+			$result['description'] = sprintf('<p>%s</p>', __('The REST API Webhook is currently disabled. This is recommended if you are only using the internal PHP integration. You can enable it in PMPro > Magic Levels if needed for external services.', 'pmpro-magic-levels'));
+			return $result;
+		}
 
 		// Check if pretty permalinks are enabled.
 		if (!get_option('permalink_structure')) {

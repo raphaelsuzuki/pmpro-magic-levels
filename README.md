@@ -203,7 +203,7 @@ add_filter('pmpro_magic_levels_cache_duration', fn() => HOUR_IN_SECONDS);
 add_filter('pmpro_magic_levels_cache_method', fn() => 'transient');
 ```
 
-See [filters.md](docs/filters.md) for complete filter reference with all 20+ available options.
+See [filters.md](docs/reference/filters.md) for complete filter reference with all 20+ available options.
 
 ## Error Codes
 

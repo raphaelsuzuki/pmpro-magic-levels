@@ -39,8 +39,9 @@ class PMPRO_Magic_Levels_Webhook_Handler
 	 */
 	public static function register_routes()
 	{
-		// Check if webhook is enabled.
-		if (!apply_filters('pmpro_magic_levels_enable_webhook', true)) {
+		// Check if webhook is enabled. Defaults to false (0) for new installations.
+		$is_enabled = get_option('pmpro_ml_webhook_enabled', '0') === '1';
+		if (!apply_filters('pmpro_magic_levels_enable_webhook', $is_enabled)) {
 			return;
 		}
 

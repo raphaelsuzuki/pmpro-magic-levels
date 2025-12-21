@@ -182,7 +182,7 @@ $result = pmpro_magic_levels_process([
 
 ## Links
 
-- [Repository](https://github.com/yourusername/pmpro-magic-levels)
+- [Repository](https://github.com/raphaelsuzuki/pmpro-magic-levels)
 - [Documentation](docs/)
 - [Content Protection Guide](docs/content-protection.md)
 - [Examples](examples/)

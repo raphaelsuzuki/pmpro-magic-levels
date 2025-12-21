@@ -413,42 +413,36 @@ Monitor API endpoint performance and set alerts for:
 
 ---
 
-## Current Limitations
+## Access Control and Webhook Status
 
-### Single Bearer Token
+### Global Webhook Toggle
 
-The plugin currently supports **one Bearer token per site**. All integrations (automation tools, n8n, forms, etc.) must use the same token.
+The Webhook Endpoint can be completely disabled from the **PMPro > Magic Levels** admin page.
+- **Recommended Status:** Disabled (unless you are using external automation tools).
+- **Benefit:** Reduces attack surface by removing the REST API route entirely when not in use.
 
-**Implications:**
-- Rate limiting is site-wide (100 requests/hour total, not per integration)
-- Cannot revoke access for individual integrations
-- Cannot set different rate limits per integration
+### Token-Based Authentication
 
-**Workarounds:**
-- Use external rate limiting (Cloudflare, etc.) for per-integration limits
-- Use IP whitelisting to restrict access
-- Implement custom authentication via filters
+The plugin supports multiple Bearer tokens through a dedicated **Token Manager**.
+- **Per-Integration Tokens:** Generate separate tokens for different services (e.g., Workflow Automator, n8n).
+- **Individual Revocation:** If one service is compromised, you can revoke its specific token without affecting others.
+- **Last Used Tracking:** Monitor when each token was last used to identify inactive or suspicious integrations.
 
-### Future Enhancements
+---
+
+## Future Enhancements
 
 Potential improvements for future versions:
 
-1. **Multiple API Keys**
-   - Create separate tokens for each integration
-   - Per-key rate limits
-   - Individual key revocation
+1. **Per-Key Rate Limits**
+   - Fine-grained control over how many requests each individual token can make.
 
-2. **Key Management**
-   - Automatic token rotation
-   - Expiration dates
-   - Usage analytics per key
-
-3. **Advanced Authentication**
+2. **Advanced Authentication**
    - OAuth 2.0 support
    - JWT tokens
-   - Webhook signatures (HMAC)
+   - Webhook signatures (HMAC) requiring a shared secret for verified origin.
 
-**Note:** These features are not currently implemented. If you need them, consider implementing at the infrastructure level (API Gateway, etc.).
+**Note:** If you need these advanced features immediately, we recommend implementing them at the infrastructure level (API Gateway, Cloudflare Workers, etc.).
 
 ---
 
