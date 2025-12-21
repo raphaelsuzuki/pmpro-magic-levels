@@ -29,20 +29,20 @@ The plugin includes basic token-based rate limiting:
 If you're using external rate limiting, disable the built-in version:
 
 ```php
-// Add to functions.php
-add_filter('pmpro_magic_levels_enable_rate_limit', '__return_false');
+// Add to functions.php.
+add_filter( 'pmpro_magic_levels_enable_rate_limit', '__return_false' );
 ```
 
 #### Adjust Built-in Limits
 
 ```php
-// Add to functions.php
-add_filter('pmpro_magic_levels_rate_limit', function() {
-    return array(
-        'max_requests' => 500,  // 500 requests
-        'time_window'  => 3600, // Per hour
-    );
-});
+// Add to functions.php.
+add_filter( 'pmpro_magic_levels_rate_limit', function() {
+	return array(
+		'max_requests' => 500,  // 500 requests.
+		'time_window'  => 3600, // Per hour.
+	);
+} );
 ```
 
 ---
@@ -287,21 +287,21 @@ location /wp-json/pmpro-magic-levels/v1/process {
 ### WordPress Plugin
 
 ```php
-add_filter('rest_pre_dispatch', function($result, $server, $request) {
-    if ($request->get_route() === '/pmpro-magic-levels/v1/process') {
-        $allowed_ips = array('1.2.3.4', '5.6.7.8');
-        $client_ip = $_SERVER['REMOTE_ADDR'];
-        
-        if (!in_array($client_ip, $allowed_ips)) {
-            return new WP_Error(
-                'forbidden',
-                'Access denied',
-                array('status' => 403)
-            );
-        }
-    }
-    return $result;
-}, 10, 3);
+add_filter( 'rest_pre_dispatch', function( $result, $server, $request ) {
+	if ( $request->get_route() === '/pmpro-magic-levels/v1/process' ) {
+		$allowed_ips = array( '1.2.3.4', '5.6.7.8' );
+		$client_ip   = $_SERVER['REMOTE_ADDR'];
+
+		if ( ! in_array( $client_ip, $allowed_ips, true ) ) {
+			return new WP_Error(
+				'forbidden',
+				'Access denied',
+				array( 'status' => 403 )
+			);
+		}
+	}
+	return $result;
+}, 10, 3 );
 ```
 
 ---
@@ -364,17 +364,19 @@ Monitor webhook traffic:
 Log all webhook requests:
 
 ```php
-add_action('rest_pre_dispatch', function($result, $server, $request) {
-    if ($request->get_route() === '/pmpro-magic-levels/v1/process') {
-        error_log(sprintf(
-            'PMPro Magic Levels webhook: IP=%s, Token=%s, Time=%s',
-            $_SERVER['REMOTE_ADDR'],
-            substr($request->get_header('authorization'), 0, 20) . '...',
-            current_time('mysql')
-        ));
-    }
-    return $result;
-}, 10, 3);
+add_action( 'rest_pre_dispatch', function( $result, $server, $request ) {
+	if ( $request->get_route() === '/pmpro-magic-levels/v1/process' ) {
+		error_log(
+			sprintf(
+				'PMPro Magic Levels webhook: IP=%s, Token=%s, Time=%s',
+				$_SERVER['REMOTE_ADDR'],
+				substr( $request->get_header( 'authorization' ), 0, 20 ) . '...',
+				current_time( 'mysql' )
+			)
+		);
+	}
+	return $result;
+}, 10, 3 );
 ```
 
 ### New Relic / DataDog

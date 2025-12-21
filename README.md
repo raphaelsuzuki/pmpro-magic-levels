@@ -33,17 +33,19 @@ Dynamically create or find membership levels from user interactions, then automa
 If you are using a form plugin (like CF7 or Formidable) on the same site, use the PHP function directly for the best performance and reliability.
 
 ```php
-$result = pmpro_magic_levels_process([
-    'name'           => 'Premium - Gold',
-    'billing_amount' => 29.99,
-    'cycle_period'   => 'Month',
-    'cycle_number'   => 1
-]);
+$result = pmpro_magic_levels_process(
+	array(
+		'name'           => 'Premium - Gold',
+		'billing_amount' => 29.99,
+		'cycle_period'   => 'Month',
+		'cycle_number'   => 1,
+	)
+);
 
-if ($result['success']) {
-    // Redirect the user to the generated checkout URL
-    wp_redirect($result['redirect_url']);
-    exit;
+if ( $result['success'] ) {
+	// Redirect the user to the generated checkout URL.
+	wp_redirect( $result['redirect_url'] );
+	exit;
 }
 ```
 

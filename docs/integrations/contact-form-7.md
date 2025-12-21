@@ -22,40 +22,42 @@ Add this to your theme's `functions.php` or a snippet plugin.
 /**
  * Integrate Contact Form 7 with PMPro Magic Levels
  */
-add_action('wpcf7_before_send_mail', 'my_pmpro_cf7_integration');
+add_action( 'wpcf7_before_send_mail', 'my_pmpro_cf7_integration' );
 
-function my_pmpro_cf7_integration($contact_form) {
-    // 1. Check if this is the correct form (Replace 123 with your Form ID)
-    $submission = WPCF7_Submission::get_instance();
-    if (!$submission || $contact_form->id() != 123) {
-        return;
-    }
+function my_pmpro_cf7_integration( $contact_form ) {
+	// 1. Check if this is the correct form (Replace 123 with your Form ID).
+	$submission = WPCF7_Submission::get_instance();
+	if ( ! $submission || $contact_form->id() != 123 ) {
+		return;
+	}
 
-    // 2. Get submitted data
-    $posted_data = $submission->get_posted_data();
+	// 2. Get submitted data.
+	$posted_data = $submission->get_posted_data();
 
-    // 3. Prepare payload for Magic Levels
-    // Map your CF7 field names to the required keys here
-    $level_data = [
-        'name'           => $posted_data['your-level-name'], // e.g., "Group - Level"
-        'billing_amount' => $posted_data['your-price'],      // e.g., "19.99"
-        'cycle_period'   => 'Month',
-        'cycle_number'   => 1
-    ];
+	// 3. Prepare payload for Magic Levels.
+	// Map your CF7 field names to the required keys here.
+	$level_data = array(
+		'name'           => $posted_data['your-level-name'], // e.g., "Group - Level".
+		'billing_amount' => $posted_data['your-price'],      // e.g., "19.99".
+		'cycle_period'   => 'Month',
+		'cycle_number'   => 1,
+	);
 
-    // 4. Call Magic Levels internally
-    if (function_exists('pmpro_magic_levels_process')) {
-        $result = pmpro_magic_levels_process($level_data);
+	// 4. Call Magic Levels internally.
+	if ( function_exists( 'pmpro_magic_levels_process' ) ) {
+		$result = pmpro_magic_levels_process( $level_data );
 
-        // 5. Store the redirect URL in a special property to pass to frontend
-        if ($result['success'] && !empty($result['redirect_url'])) {
-            // CF7 doesn't have a direct "set_redirect" method, so we pass it 
-            // via the API response properties.
-            $submission->add_result_props([
-                'magic_redirect_url' => $result['redirect_url']
-            ]);
-        }
-    }
+		// 5. Store the redirect URL in a special property to pass to frontend.
+		if ( $result['success'] && ! empty( $result['redirect_url'] ) ) {
+			// CF7 doesn't have a direct "set_redirect" method, so we pass it 
+			// via the API response properties.
+			$submission->add_result_props(
+				array(
+					'magic_redirect_url' => $result['redirect_url'],
+				)
+			);
+		}
+	}
 }
 ```
 
@@ -77,6 +79,8 @@ document.addEventListener( 'wpcf7mailsent', function( event ) {
 2.  **JS Redirect:** The `wpcf7mailsent` event listener catches the success response. It sees the custom `magic_redirect_url` property and redirects the browser immediately.
 
 ## Troubleshooting
+*   **Group Format:** The level name **must** include a group (e.g., `Group - Level`). If the submitted name does not include the ` - ` separator, validation will fail.
 *   **Form ID:** Ensure the ID in the PHP `if ($contact_form->id() != 123)` matches your actual form ID.
 *   **Field Names:** Ensure `$posted_data['your-field-name']` matches the names in your CF7 form template.
 *   **Javascript Placement:** The JS must be loaded on the page where the form exists.
+*   **Debug Tip:** Check your `debug.log` if the redirect doesn't happen.

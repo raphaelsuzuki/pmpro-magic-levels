@@ -12,8 +12,8 @@ All available filters with descriptions, defaults, and examples.
 **Default:** `1.00`  
 **Example:**
 ```php
-// Prices must be multiples of $5 ($5, $10, $15, etc.)
-add_filter('pmpro_magic_levels_price_increment', fn() => 5.00);
+// Prices must be multiples of $5 ($5, $10, $15, etc.).
+add_filter( 'pmpro_magic_levels_price_increment', fn() => 5.00 );
 ```
 
 ### `pmpro_magic_levels_min_price`
@@ -22,8 +22,8 @@ add_filter('pmpro_magic_levels_price_increment', fn() => 5.00);
 **Default:** `0.00`  
 **Example:**
 ```php
-// Minimum price $10
-add_filter('pmpro_magic_levels_min_price', fn() => 10.00);
+// Minimum price $10.
+add_filter( 'pmpro_magic_levels_min_price', fn() => 10.00 );
 ```
 
 ### `pmpro_magic_levels_max_price`
@@ -32,8 +32,8 @@ add_filter('pmpro_magic_levels_min_price', fn() => 10.00);
 **Default:** `9999.99`  
 **Example:**
 ```php
-// Maximum price $500
-add_filter('pmpro_magic_levels_max_price', fn() => 500.00);
+// Maximum price $500.
+add_filter( 'pmpro_magic_levels_max_price', fn() => 500.00 );
 ```
 
 ### `pmpro_magic_levels_allow_free_levels`
@@ -42,8 +42,8 @@ add_filter('pmpro_magic_levels_max_price', fn() => 500.00);
 **Default:** `true`  
 **Example:**
 ```php
-// Disable free levels
-add_filter('pmpro_magic_levels_allow_free_levels', '__return_false');
+// Disable free levels.
+add_filter( 'pmpro_magic_levels_allow_free_levels', '__return_false' );
 ```
 
 ### `pmpro_magic_levels_require_initial_payment`
@@ -52,8 +52,8 @@ add_filter('pmpro_magic_levels_allow_free_levels', '__return_false');
 **Default:** `false`  
 **Example:**
 ```php
-// Require initial payment
-add_filter('pmpro_magic_levels_require_initial_payment', '__return_true');
+// Require initial payment.
+add_filter( 'pmpro_magic_levels_require_initial_payment', '__return_true' );
 ```
 
 ---
@@ -66,8 +66,8 @@ add_filter('pmpro_magic_levels_require_initial_payment', '__return_true');
 **Default:** `['Day', 'Week', 'Month', 'Year']`  
 **Example:**
 ```php
-// Only monthly and yearly
-add_filter('pmpro_magic_levels_allowed_periods', fn() => ['Month', 'Year']);
+// Only monthly and yearly.
+add_filter( 'pmpro_magic_levels_allowed_periods', fn() => array( 'Month', 'Year' ) );
 ```
 
 ### `pmpro_magic_levels_allowed_cycle_numbers`
@@ -76,8 +76,8 @@ add_filter('pmpro_magic_levels_allowed_periods', fn() => ['Month', 'Year']);
 **Default:** `[1, 2, 3, 6, 12]`  
 **Example:**
 ```php
-// Only allow billing every 1 or 3 months
-add_filter('pmpro_magic_levels_allowed_cycle_numbers', fn() => [1, 3]);
+// Only allow billing every 1 or 3 months.
+add_filter( 'pmpro_magic_levels_allowed_cycle_numbers', fn() => array( 1, 3 ) );
 ```
 
 ### `pmpro_magic_levels_max_billing_limit`
@@ -86,8 +86,8 @@ add_filter('pmpro_magic_levels_allowed_cycle_numbers', fn() => [1, 3]);
 **Default:** `999`  
 **Example:**
 ```php
-// Max 24 payments
-add_filter('pmpro_magic_levels_max_billing_limit', fn() => 24);
+// Max 24 payments.
+add_filter( 'pmpro_magic_levels_max_billing_limit', fn() => 24 );
 ```
 
 ---
@@ -100,8 +100,8 @@ add_filter('pmpro_magic_levels_max_billing_limit', fn() => 24);
 **Default:** `1`  
 **Example:**
 ```php
-// Name must be at least 5 characters
-add_filter('pmpro_magic_levels_min_name_length', fn() => 5);
+// Name must be at least 5 characters.
+add_filter( 'pmpro_magic_levels_min_name_length', fn() => 5 );
 ```
 
 ### `pmpro_magic_levels_max_name_length`
@@ -110,8 +110,8 @@ add_filter('pmpro_magic_levels_min_name_length', fn() => 5);
 **Default:** `255`  
 **Example:**
 ```php
-// Name cannot exceed 50 characters
-add_filter('pmpro_magic_levels_max_name_length', fn() => 50);
+// Name cannot exceed 50 characters.
+add_filter( 'pmpro_magic_levels_max_name_length', fn() => 50 );
 ```
 
 ### `pmpro_magic_levels_name_pattern`
@@ -120,11 +120,11 @@ add_filter('pmpro_magic_levels_max_name_length', fn() => 50);
 **Default:** `null` (no pattern restriction)  
 **Example:**
 ```php
-// Only alphanumeric, spaces, and hyphens
-add_filter('pmpro_magic_levels_name_pattern', fn() => '/^[a-zA-Z0-9\s\-]+$/');
+// Only alphanumeric, spaces, and hyphens.
+add_filter( 'pmpro_magic_levels_name_pattern', fn() => '/^[a-zA-Z0-9\s\-]+$/' );
 
-// Only letters and spaces
-add_filter('pmpro_magic_levels_name_pattern', fn() => '/^[a-zA-Z\s]+$/');
+// Only letters and spaces.
+add_filter( 'pmpro_magic_levels_name_pattern', fn() => '/^[a-zA-Z\s]+$/' );
 ```
 
 ### `pmpro_magic_levels_name_blacklist`
@@ -133,8 +133,8 @@ add_filter('pmpro_magic_levels_name_pattern', fn() => '/^[a-zA-Z\s]+$/');
 **Default:** `[]` (empty)  
 **Example:**
 ```php
-// Blacklist certain words
-add_filter('pmpro_magic_levels_name_blacklist', fn() => ['test', 'demo', 'free', 'admin']);
+// Blacklist certain words.
+add_filter( 'pmpro_magic_levels_name_blacklist', fn() => array( 'test', 'demo', 'free', 'admin' ) );
 ```
 
 ---
@@ -146,31 +146,31 @@ add_filter('pmpro_magic_levels_name_blacklist', fn() => ['test', 'demo', 'free',
 **Type:** Array  
 **Default:**
 ```php
-[
-    'max_requests' => 100,
-    'time_window' => 3600,  // 1 hour in seconds
-    'by' => 'ip'            // 'ip' or 'user'
-]
+array(
+	'max_requests' => 100,
+	'time_window'  => 3600,  // 1 hour in seconds.
+	'by'           => 'ip',   // 'ip' or 'user'.
+)
 ```
 **Example:**
 ```php
-// 10 requests per hour per IP
-add_filter('pmpro_magic_levels_rate_limit', function() {
-    return [
-        'max_requests' => 10,
-        'time_window' => 3600,
-        'by' => 'ip'
-    ];
-});
+// 10 requests per hour per IP.
+add_filter( 'pmpro_magic_levels_rate_limit', function() {
+	return array(
+		'max_requests' => 10,
+		'time_window'  => 3600,
+		'by'           => 'ip',
+	);
+} );
 
-// 50 requests per 30 minutes per user
-add_filter('pmpro_magic_levels_rate_limit', function() {
-    return [
-        'max_requests' => 50,
-        'time_window' => 1800,
-        'by' => 'user'
-    ];
-});
+// 50 requests per 30 minutes per user.
+add_filter( 'pmpro_magic_levels_rate_limit', function() {
+	return array(
+		'max_requests' => 50,
+		'time_window'  => 1800,
+		'by'           => 'user',
+	);
+} );
 ```
 
 ### `pmpro_magic_levels_max_levels_per_day`
@@ -179,8 +179,8 @@ add_filter('pmpro_magic_levels_rate_limit', function() {
 **Default:** `1000`  
 **Example:**
 ```php
-// Max 50 levels per day
-add_filter('pmpro_magic_levels_max_levels_per_day', fn() => 50);
+// Max 50 levels per day.
+add_filter( 'pmpro_magic_levels_max_levels_per_day', fn() => 50 );
 ```
 
 ---
@@ -193,8 +193,8 @@ add_filter('pmpro_magic_levels_max_levels_per_day', fn() => 50);
 **Default:** `true`  
 **Example:**
 ```php
-// Disable webhook (only use PHP function)
-add_filter('pmpro_magic_levels_enable_webhook', '__return_false');
+// Disable webhook (only use PHP function).
+add_filter( 'pmpro_magic_levels_enable_webhook', '__return_false' );
 ```
 
 **Note:** Webhook authentication is managed through the admin interface (PMPro > Magic Levels) using Bearer tokens. There are no filters for authentication configuration.
@@ -209,8 +209,8 @@ add_filter('pmpro_magic_levels_enable_webhook', '__return_false');
 **Default:** `true`  
 **Example:**
 ```php
-// Disable caching (not recommended)
-add_filter('pmpro_magic_levels_enable_cache', '__return_false');
+// Disable caching (not recommended).
+add_filter( 'pmpro_magic_levels_enable_cache', '__return_false' );
 ```
 
 ### `pmpro_magic_levels_cache_duration`
@@ -219,11 +219,11 @@ add_filter('pmpro_magic_levels_enable_cache', '__return_false');
 **Default:** `3600` (1 hour)  
 **Example:**
 ```php
-// Cache for 30 minutes
-add_filter('pmpro_magic_levels_cache_duration', fn() => 1800);
+// Cache for 30 minutes.
+add_filter( 'pmpro_magic_levels_cache_duration', fn() => 1800 );
 
-// Cache for 24 hours
-add_filter('pmpro_magic_levels_cache_duration', fn() => DAY_IN_SECONDS);
+// Cache for 24 hours.
+add_filter( 'pmpro_magic_levels_cache_duration', fn() => DAY_IN_SECONDS );
 ```
 
 ### `pmpro_magic_levels_cache_method`
@@ -233,14 +233,14 @@ add_filter('pmpro_magic_levels_cache_duration', fn() => DAY_IN_SECONDS);
 **Options:** `'transient'`, `'object'`, `'none'`  
 **Example:**
 ```php
-// Use object cache (Redis/Memcached)
-add_filter('pmpro_magic_levels_cache_method', fn() => 'object');
+// Use object cache (Redis/Memcached).
+add_filter( 'pmpro_magic_levels_cache_method', fn() => 'object' );
 
-// Use transients (default)
-add_filter('pmpro_magic_levels_cache_method', fn() => 'transient');
+// Use transients (default).
+add_filter( 'pmpro_magic_levels_cache_method', fn() => 'transient' );
 
-// Disable cache
-add_filter('pmpro_magic_levels_cache_method', fn() => 'none');
+// Disable cache.
+add_filter( 'pmpro_magic_levels_cache_method', fn() => 'none' );
 ```
 
 ---
@@ -250,25 +250,29 @@ add_filter('pmpro_magic_levels_cache_method', fn() => 'none');
 ### Example 1: Strict Validation
 ```php
 <?php
-// Strict pricing
-add_filter('pmpro_magic_levels_price_increment', fn() => 5.00);
-add_filter('pmpro_magic_levels_min_price', fn() => 10.00);
-add_filter('pmpro_magic_levels_max_price', fn() => 200.00);
-add_filter('pmpro_magic_levels_allow_free_levels', '__return_false');
+// Strict pricing.
+add_filter( 'pmpro_magic_levels_price_increment', fn() => 5.00 );
+add_filter( 'pmpro_magic_levels_min_price', fn() => 10.00 );
+add_filter( 'pmpro_magic_levels_max_price', fn() => 200.00 );
+add_filter( 'pmpro_magic_levels_allow_free_levels', '__return_false' );
 
-// Only monthly/yearly
-add_filter('pmpro_magic_levels_allowed_periods', fn() => ['Month', 'Year']);
-add_filter('pmpro_magic_levels_allowed_cycle_numbers', fn() => [1]);
+// Only monthly/yearly.
+add_filter( 'pmpro_magic_levels_allowed_periods', fn() => array( 'Month', 'Year' ) );
+add_filter( 'pmpro_magic_levels_allowed_cycle_numbers', fn() => array( 1 ) );
 
-// Strict rate limiting
-add_filter('pmpro_magic_levels_rate_limit', function() {
-    return ['max_requests' => 5, 'time_window' => 3600, 'by' => 'ip'];
-});
+// Strict rate limiting.
+add_filter( 'pmpro_magic_levels_rate_limit', function() {
+	return array(
+		'max_requests' => 5,
+		'time_window'  => 3600,
+		'by'           => 'ip',
+	);
+} );
 
-// Name validation
-add_filter('pmpro_magic_levels_min_name_length', fn() => 5);
-add_filter('pmpro_magic_levels_max_name_length', fn() => 50);
-add_filter('pmpro_magic_levels_name_blacklist', fn() => ['test', 'demo']);
+// Name validation.
+add_filter( 'pmpro_magic_levels_min_name_length', fn() => 5 );
+add_filter( 'pmpro_magic_levels_max_name_length', fn() => 50 );
+add_filter( 'pmpro_magic_levels_name_blacklist', fn() => array( 'test', 'demo' ) );
 
 // Note: Webhook authentication is managed via admin interface (PMPro > Magic Levels)
 ```
@@ -276,45 +280,52 @@ add_filter('pmpro_magic_levels_name_blacklist', fn() => ['test', 'demo']);
 ### Example 2: Relaxed Validation
 ```php
 <?php
-// Allow any price
-add_filter('pmpro_magic_levels_min_price', fn() => 0.00);
-add_filter('pmpro_magic_levels_max_price', fn() => 99999.99);
-add_filter('pmpro_magic_levels_price_increment', fn() => 0.01);
-add_filter('pmpro_magic_levels_allow_free_levels', '__return_true');
+// Allow any price.
+add_filter( 'pmpro_magic_levels_min_price', fn() => 0.00 );
+add_filter( 'pmpro_magic_levels_max_price', fn() => 99999.99 );
+add_filter( 'pmpro_magic_levels_price_increment', fn() => 0.01 );
+add_filter( 'pmpro_magic_levels_allow_free_levels', '__return_true' );
 
-// Allow all periods
-add_filter('pmpro_magic_levels_allowed_periods', fn() => ['Day', 'Week', 'Month', 'Year']);
-add_filter('pmpro_magic_levels_allowed_cycle_numbers', fn() => range(1, 12));
+// Allow all periods.
+add_filter( 'pmpro_magic_levels_allowed_periods', fn() => array( 'Day', 'Week', 'Month', 'Year' ) );
+add_filter( 'pmpro_magic_levels_allowed_cycle_numbers', fn() => range( 1, 12 ) );
 
-// Generous rate limiting
-add_filter('pmpro_magic_levels_rate_limit', function() {
-    return ['max_requests' => 1000, 'time_window' => 3600, 'by' => 'ip'];
-});
-add_filter('pmpro_magic_levels_max_levels_per_day', fn() => 10000);
+// Generous rate limiting.
+add_filter( 'pmpro_magic_levels_rate_limit', function() {
+	return array(
+		'max_requests' => 1000,
+		'time_window'  => 3600,
+		'by'           => 'ip',
+	);
+} );
+add_filter( 'pmpro_magic_levels_max_levels_per_day', fn() => 10000 );
 ```
 
 ### Example 3: High-Performance Caching
 ```php
 <?php
-// Use object cache (requires Redis/Memcached)
-add_filter('pmpro_magic_levels_cache_method', fn() => 'object');
+// Use object cache (requires Redis/Memcached).
+add_filter( 'pmpro_magic_levels_cache_method', fn() => 'object' );
 
-// Cache for 24 hours
-add_filter('pmpro_magic_levels_cache_duration', fn() => DAY_IN_SECONDS);
+// Cache for 24 hours.
+add_filter( 'pmpro_magic_levels_cache_duration', fn() => DAY_IN_SECONDS );
 ```
 
 ### Example 4: Strict Rate Limiting
 ```php
 <?php
-// Note: Webhook authentication is managed via admin interface (PMPro > Magic Levels)
+// Note: Webhook authentication is managed via admin interface (PMPro > Magic Levels).
 
-// Strict rate limiting
-add_filter('pmpro_magic_levels_rate_limit', function() {
-    return ['max_requests' => 10, 'time_window' => 3600];
-});
+// Strict rate limiting.
+add_filter( 'pmpro_magic_levels_rate_limit', function() {
+	return array(
+		'max_requests' => 10,
+		'time_window'  => 3600,
+	);
+} );
 
-// Low daily limit
-add_filter('pmpro_magic_levels_max_levels_per_day', fn() => 50);
+// Low daily limit.
+add_filter( 'pmpro_magic_levels_max_levels_per_day', fn() => 50 );
 ```
 
 ---
@@ -324,8 +335,8 @@ add_filter('pmpro_magic_levels_max_levels_per_day', fn() => 50);
 All filters use default WordPress priority (10). To override other filters, use higher priority:
 
 ```php
-// This runs after other filters
-add_filter('pmpro_magic_levels_min_price', fn() => 20.00, 20);
+// This runs after other filters.
+add_filter( 'pmpro_magic_levels_min_price', fn() => 20.00, 20 );
 ```
 
 ---
@@ -337,9 +348,9 @@ add_filter('pmpro_magic_levels_min_price', fn() => 20.00, 20);
 **Parameters:** None  
 **Example:**
 ```php
-add_action('pmpro_magic_levels_cache_cleared', function() {
-    error_log('Magic Levels cache was cleared');
-});
+add_action( 'pmpro_magic_levels_cache_cleared', function() {
+	error_log( 'Magic Levels cache was cleared' );
+} );
 ```
 
 ---
@@ -377,12 +388,14 @@ To test if your filters are working:
 
 ```php
 <?php
-// Test validation
-$result = pmpro_magic_levels_process([
-    'name' => 'Test',
-    'billing_amount' => 7.00  // Should fail if min_price is 10
-]);
+// Test validation.
+$result = pmpro_magic_levels_process(
+	array(
+		'name'           => 'Test',
+		'billing_amount' => 7.00,  // Should fail if min_price is 10.
+	)
+);
 
-var_dump($result);
-// Expected: ['success' => false, 'error' => 'Price must be at least $10.00']
+var_dump( $result );
+// Expected: array( 'success' => false, 'error' => 'Price must be at least $10.00' ).
 ```

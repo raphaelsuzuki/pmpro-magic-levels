@@ -8,6 +8,19 @@ To successfully integrate a form plugin, it must perform two actions:
 1.  **Process Data:** Call the Magic Levels engine to find or create a level.
 2.  **Redirect:** Send the user to the generated checkout URL.
 
+## Critical Validation Rule: Group Naming
+
+PMPro 3.x requires all levels to belong to a group. To support this, **Magic Levels** requires that the `name` field follows this format:
+
+`GroupName - LevelName`
+
+**Examples:**
+*   `Membership - Gold` (Valid)
+*   `Standard - Monthly` (Valid)
+*   `Gold` (**Invalid** - creation will fail)
+
+Ensure your form mapping or PHP snippet provides a name that includes the ` - ` (space-dash-space) separator.
+
 ---
 
 ## 1. Internal Integration (Recommended)

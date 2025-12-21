@@ -21,17 +21,19 @@ PMPro Magic Levels allows you to dynamically create membership levels from form 
 For internal WordPress integrations (forms on the same site), use the PHP function directly. It is faster, more secure, and allows for instant redirects.
 
 ```php
-$result = pmpro_magic_levels_process([
-    'name'           => 'Basic - Gold',
-    'billing_amount' => 29.99,
-    'cycle_period'   => 'Month',
-    'cycle_number'   => 1
-]);
+$result = pmpro_magic_levels_process(
+	array(
+		'name'           => 'Basic - Gold',
+		'billing_amount' => 29.99,
+		'cycle_period'   => 'Month',
+		'cycle_number'   => 1,
+	)
+);
 
-if ($result['success']) {
-    // Redirect the user to the generated checkout URL
-    wp_redirect($result['redirect_url']);
-    exit;
+if ( $result['success'] ) {
+	// Redirect the user to the generated checkout URL.
+	wp_redirect( $result['redirect_url'] );
+	exit;
 }
 ```
 

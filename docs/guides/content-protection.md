@@ -123,19 +123,21 @@ fetch('/wp-json/pmpro-magic-levels/v1/create-level', {
 
 ```php
 <?php
-$result = pmpro_magic_levels_process([
-    'name' => 'Premium - Gold',
-    'billing_amount' => 29.99,
-    'cycle_period' => 'Month',
-    'cycle_number' => 1,
-    'protected_categories' => [5, 12],
-    'protected_pages' => [42, 67],
-    'protected_posts' => [123, 456]
-]);
+$result = pmpro_magic_levels_process(
+	array(
+		'name'                 => 'Premium - Gold',
+		'billing_amount'       => 29.99,
+		'cycle_period'         => 'Month',
+		'cycle_number'         => 1,
+		'protected_categories' => array( 5, 12 ),
+		'protected_pages'      => array( 42, 67 ),
+		'protected_posts'      => array( 123, 456 ),
+	)
+);
 
-if ($result['success']) {
-    echo "Level created with ID: " . $result['level_id'];
-    echo "Content protection applied automatically";
+if ( $result['success'] ) {
+	echo 'Level created with ID: ' . $result['level_id'];
+	echo 'Content protection applied automatically';
 }
 ```
 
@@ -152,14 +154,14 @@ if ($result['success']) {
 **Via Code:**
 ```php
 <?php
-// Get all categories
+// Get all categories.
 $categories = get_categories();
-foreach ($categories as $cat) {
-    echo $cat->term_id . ' - ' . $cat->name . "\n";
+foreach ( $categories as $cat ) {
+	echo $cat->term_id . ' - ' . $cat->name . "\n";
 }
 
-// Get specific category by slug
-$cat = get_category_by_slug('premium-content');
+// Get specific category by slug.
+$cat = get_category_by_slug( 'premium-content' );
 echo $cat->term_id;
 ```
 
@@ -174,14 +176,14 @@ echo $cat->term_id;
 **Via Code:**
 ```php
 <?php
-// Get all pages
+// Get all pages.
 $pages = get_pages();
-foreach ($pages as $page) {
-    echo $page->ID . ' - ' . $page->post_title . "\n";
+foreach ( $pages as $page ) {
+	echo $page->ID . ' - ' . $page->post_title . "\n";
 }
 
-// Get specific page by slug
-$page = get_page_by_path('members-only');
+// Get specific page by slug.
+$page = get_page_by_path( 'members-only' );
 echo $page->ID;
 ```
 
@@ -196,14 +198,14 @@ echo $page->ID;
 **Via Code:**
 ```php
 <?php
-// Get all posts
-$posts = get_posts(['numberposts' => -1]);
-foreach ($posts as $post) {
-    echo $post->ID . ' - ' . $post->post_title . "\n";
+// Get all posts.
+$posts = get_posts( array( 'numberposts' => -1 ) );
+foreach ( $posts as $post ) {
+	echo $post->ID . ' - ' . $post->post_title . "\n";
 }
 
-// Get specific post by slug
-$post = get_page_by_path('premium-article', OBJECT, 'post');
+// Get specific post by slug.
+$post = get_page_by_path( 'premium-article', OBJECT, 'post' );
 echo $post->ID;
 ```
 
@@ -259,27 +261,33 @@ Create different levels with different content access:
 
 ```php
 <?php
-// Basic Level - Access to category 5 only
-pmpro_magic_levels_process([
-    'name' => 'Membership - Basic',
-    'billing_amount' => 9.99,
-    'protected_categories' => [5]
-]);
+// Basic Level - Access to category 5 only.
+pmpro_magic_levels_process(
+	array(
+		'name'                 => 'Membership - Basic',
+		'billing_amount'       => 9.99,
+		'protected_categories' => array( 5 ),
+	)
+);
 
-// Premium Level - Access to categories 5 and 12
-pmpro_magic_levels_process([
-    'name' => 'Membership - Premium',
-    'billing_amount' => 29.99,
-    'protected_categories' => [5, 12]
-]);
+// Premium Level - Access to categories 5 and 12.
+pmpro_magic_levels_process(
+	array(
+		'name'                 => 'Membership - Premium',
+		'billing_amount'       => 29.99,
+		'protected_categories' => array( 5, 12 ),
+	)
+);
 
-// VIP Level - Access to all categories plus exclusive pages
-pmpro_magic_levels_process([
-    'name' => 'Membership - VIP',
-    'billing_amount' => 99.99,
-    'protected_categories' => [5, 12, 18],
-    'protected_pages' => [42, 67]
-]);
+// VIP Level - Access to all categories plus exclusive pages.
+pmpro_magic_levels_process(
+	array(
+		'name'                 => 'Membership - VIP',
+		'billing_amount'       => 99.99,
+		'protected_categories' => array( 5, 12, 18 ),
+		'protected_pages'      => array( 42, 67 ),
+	)
+);
 ```
 
 ### Use Case 2: Course-Based Membership
@@ -288,22 +296,29 @@ Protect course pages when creating a level:
 
 ```php
 <?php
-// Get all course pages
-$course_pages = get_pages([
-    'meta_key' => 'course_type',
-    'meta_value' => 'premium'
-]);
+// Get all course pages.
+$course_pages = get_pages(
+	array(
+		'meta_key'   => 'course_type',
+		'meta_value' => 'premium',
+	)
+);
 
-$course_ids = array_map(function($page) {
-    return $page->ID;
-}, $course_pages);
+$course_ids = array_map(
+	function( $page ) {
+		return $page->ID;
+	},
+	$course_pages
+);
 
-// Create level with course access
-pmpro_magic_levels_process([
-    'name' => 'Courses - Premium Bundle',
-    'billing_amount' => 199.99,
-    'protected_pages' => $course_ids
-]);
+// Create level with course access.
+pmpro_magic_levels_process(
+	array(
+		'name'            => 'Courses - Premium Bundle',
+		'billing_amount'  => 199.99,
+		'protected_pages' => $course_ids,
+	)
+);
 ```
 
 ### Use Case 3: Dynamic Pricing with Content
@@ -342,26 +357,33 @@ Protect all pages under a parent page:
 
 ```php
 <?php
-// Get all child pages of a parent page
+// Get all child pages of a parent page.
 $parent_page_id = 10;
-$child_pages = get_pages([
-    'child_of' => $parent_page_id,
-]);
+$child_pages    = get_pages(
+	array(
+		'child_of' => $parent_page_id,
+	)
+);
 
-$page_ids = array_map(function($page) {
-    return $page->ID;
-}, $child_pages);
+$page_ids = array_map(
+	function( $page ) {
+		return $page->ID;
+	},
+	$child_pages
+);
 
-$result = pmpro_magic_levels_process([
-    'name' => 'Courses - Complete Bundle',
-    'billing_amount' => 199.99,
-    'cycle_period' => 'Year',
-    'cycle_number' => 1,
-    'protected_pages' => $page_ids,
-]);
+$result = pmpro_magic_levels_process(
+	array(
+		'name'            => 'Courses - Complete Bundle',
+		'billing_amount'  => 199.99,
+		'cycle_period'    => 'Year',
+		'cycle_number'    => 1,
+		'protected_pages' => $page_ids,
+	)
+);
 
-if ($result['success']) {
-    echo 'All course pages are now protected';
+if ( $result['success'] ) {
+	echo 'All course pages are now protected';
 }
 ```
 
@@ -371,27 +393,34 @@ Protect posts based on custom field values:
 
 ```php
 <?php
-// Get all posts with a specific custom field
-$premium_posts = get_posts([
-    'numberposts' => -1,
-    'meta_key' => 'content_type',
-    'meta_value' => 'premium',
-]);
+// Get all posts with a specific custom field.
+$premium_posts = get_posts(
+	array(
+		'numberposts' => -1,
+		'meta_key'    => 'content_type',
+		'meta_value'  => 'premium',
+	)
+);
 
-$post_ids = array_map(function($post) {
-    return $post->ID;
-}, $premium_posts);
+$post_ids = array_map(
+	function( $post ) {
+		return $post->ID;
+	},
+	$premium_posts
+);
 
-$result = pmpro_magic_levels_process([
-    'name' => 'Premium - Content Access',
-    'billing_amount' => 49.99,
-    'cycle_period' => 'Month',
-    'cycle_number' => 1,
-    'protected_posts' => $post_ids,
-]);
+$result = pmpro_magic_levels_process(
+	array(
+		'name'            => 'Premium - Content Access',
+		'billing_amount'  => 49.99,
+		'cycle_period'    => 'Month',
+		'cycle_number'    => 1,
+		'protected_posts' => $post_ids,
+	)
+);
 
-if ($result['success']) {
-    echo 'All premium posts are now protected';
+if ( $result['success'] ) {
+	echo 'All premium posts are now protected';
 }
 ```
 
@@ -401,55 +430,59 @@ if ($result['success']) {
 
 ```php
 <?php
-add_action('wpforms_process_complete', function($fields, $entry, $form_data) {
-    // Only process form ID 123
-    if (123 !== $form_data['id']) {
-        return;
-    }
+add_action( 'wpforms_process_complete', function( $fields, $entry, $form_data ) {
+	// Only process form ID 123.
+	if ( 123 !== $form_data['id'] ) {
+		return;
+	}
 
-    // Get selected categories from checkbox field
-    $selected_categories = isset($fields[5]['value']) ? explode(',', $fields[5]['value']) : [];
-    $selected_categories = array_map('intval', $selected_categories);
+	// Get selected categories from checkbox field.
+	$selected_categories = isset( $fields[5]['value'] ) ? explode( ',', $fields[5]['value'] ) : array();
+	$selected_categories = array_map( 'intval', $selected_categories );
 
-    $result = pmpro_magic_levels_process([
-        'name' => $fields[1]['value'], // Name field
-        'billing_amount' => $fields[2]['value'], // Price field
-        'cycle_period' => $fields[3]['value'], // Period field
-        'cycle_number' => 1,
-        'protected_categories' => $selected_categories,
-    ]);
+	$result = pmpro_magic_levels_process(
+		array(
+			'name'                 => $fields[1]['value'], // Name field.
+			'billing_amount'       => $fields[2]['value'], // Price field.
+			'cycle_period'         => $fields[3]['value'], // Period field.
+			'cycle_number'         => 1,
+			'protected_categories' => $selected_categories,
+		)
+	);
 
-    if ($result['success']) {
-        $checkout_url = pmpro_url('checkout', '?level=' . $result['level_id']);
-        wp_redirect($checkout_url);
-        exit;
-    }
-}, 10, 3);
+	if ( $result['success'] ) {
+		$checkout_url = pmpro_url( 'checkout', '?level=' . $result['level_id'] );
+		wp_redirect( $checkout_url );
+		exit;
+	}
+}, 10, 3 );
 ```
 
 **Gravity Forms Integration:**
 
 ```php
 <?php
-add_action('gform_after_submission_5', function($entry, $form) {
-    // Get category IDs from multi-select field
-    $category_ids = rgar($entry, '5'); // Field 5 is multi-select
-    $category_ids = json_decode($category_ids, true);
+add_action( 'gform_after_submission_5', function( $entry, $form ) {
+	// Get category IDs from multi-select field.
+	$category_ids = rgar( $entry, '5' ); // Field 5 is multi-select.
+	$category_ids = json_decode( $category_ids, true );
 
-    $result = pmpro_magic_levels_process([
-        'name' => rgar($entry, '1'),
-        'billing_amount' => rgar($entry, '2'),
-        'cycle_period' => rgar($entry, '3'),
-        'cycle_number' => 1,
-        'protected_categories' => $category_ids,
-    ]);
+	$result = pmpro_magic_levels_process(
+		array(
+			'name'                 => rgar( $entry, '1' ),
+			'billing_amount'       => rgar( $entry, '2' ),
+			'cycle_period'         => rgar( $entry, '3' ),
+			'cycle_number'         => 1,
+			'protected_categories' => $category_ids,
+		)
+	);
 
-    if ($result['success']) {
-        $checkout_url = pmpro_url('checkout', '?level=' . $result['level_id']);
-        wp_redirect($checkout_url);
-        exit;
-    }
-}, 10, 2);
+	if ( $result['success'] ) {
+		$checkout_url = pmpro_url( 'checkout', '?level=' . $result['level_id'] );
+		wp_redirect( $checkout_url );
+		exit;
+	}
+}, 10, 2 );
 ```
 
 ## How PMPro Checks Access
@@ -475,11 +508,11 @@ Content protection is managed by PMPro. To remove protection:
 **Via Code:**
 ```php
 <?php
-// Remove all category protections for a level
-pmpro_updateMembershipCategories($level_id, []);
+// Remove all category protections for a level.
+pmpro_updateMembershipCategories( $level_id, array() );
 
-// Remove a page from all level restrictions
-pmpro_update_post_level_restrictions($page_id, []);
+// Remove a page from all level restrictions.
+pmpro_update_post_level_restrictions( $page_id, array() );
 ```
 
 ## Performance Considerations

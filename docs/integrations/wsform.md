@@ -100,8 +100,8 @@ To redirect the user to checkout after a successful submission:
 ### 1. "400 Bad Request"
 *   **Cause**: Validation failed.
 *   **Fix**:
+    *   **Group Format:** Ensure the `name` field includes a group (e.g., `Group - Level`). The ` - ` (space-dash-space) separator is **required**.
     *   Check that `billing_amount` is mapped as a **Float**.
-    *   Verify `name` is not empty and follows strict format if required (e.g. `Group - Level`).
     *   Ensure `cycle_period` is valid (Day, Week, Month, Year).
 
 ### 2. "401 Unauthorized"
