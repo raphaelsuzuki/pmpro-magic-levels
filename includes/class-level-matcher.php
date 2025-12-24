@@ -153,8 +153,45 @@ class PMPRO_Magic_Levels_Level_Matcher
 		$where_clause = implode(' AND ', $where_conditions);
 		$query = "SELECT id FROM {$wpdb->pmpro_membership_levels} WHERE {$where_clause} LIMIT 1";
 
-		// Execute query.
-		$level_id = $wpdb->get_var($wpdb->prepare($query, $where_values)); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		// Sanity-check: ensure the number of placeholders in the query matches
+		// the number of provided values. This prevents malformed prepared
+		// statements and avoids accidental passing of a single array to
+		// $wpdb->prepare() (a common mistake).
+		$placeholder_count = preg_match_all( '/%[sdfo]/', $query, $placeholder_matches ) ? count( $placeholder_matches[0] ) : 0;
+		$provided_count  = is_array( $where_values ) ? count( $where_values ) : 0;
+
+		// Auto-unwrap a common mistake where callers pass a single array
+		// containing all values (e.g. $wpdb->prepare( $sql, $values_array ) ).
+		if ( 1 === $provided_count && isset( $where_values[0] ) && is_array( $where_values[0] ) ) {
+			$where_values   = $where_values[0];
+			$provided_count = count( $where_values );
+		}
+
+		if ( $placeholder_count !== $provided_count ) {
+			// Log helpful debug information when WP_DEBUG is enabled.
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( sprintf(
+					'pmpro-magic-levels: Placeholder count mismatch in %s. Query expects %d placeholders but %d values provided. Query: %s',
+					__METHOD__,
+					$placeholder_count,
+					$provided_count,
+					$query
+				) );
+			}
+
+			// By default, do NOT attempt to run a mismatched prepare call. This
+			// is the safest option. If you need to preserve the previous
+			// (potentially unsafe) behavior for backwards compatibility,
+			// explicitly enable the filter below.
+			if ( apply_filters( 'pmpro_magic_levels_allow_prepare_fallback', false ) ) {
+				$level_id = $wpdb->get_var( $wpdb->prepare( $query, ...$where_values ) );
+			} else {
+				return null;
+			}
+		} else {
+			// Execute prepared query using argument unpacking.
+			$level_id = $wpdb->get_var( $wpdb->prepare( $query, ...$where_values ) );
+		}
 
 		return $level_id ? intval($level_id) : null;
 	}
