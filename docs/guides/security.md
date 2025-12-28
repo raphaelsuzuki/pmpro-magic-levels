@@ -398,6 +398,41 @@ Monitor API endpoint performance and set alerts for:
 - [ ] Keep WordPress and plugins updated
 - [ ] Use HTTPS only (enforce SSL)
 - [ ] Consider IP whitelisting for internal integrations
+
+## Token Rotation & Audit
+
+The plugin provides a simple, manual token rotation ("roll") feature and lightweight audit logging to help with development and incident response.
+
+How rotation works
+- **Manual action**: Rotate tokens from **PMPro > Magic Levels** admin page using the Rotate button next to each token.
+- **Single-show token**: After rotation the new raw token is displayed once in a success notice; it is not stored in plaintext in the database.
+- **Non-breaking**: Existing tokens remain valid until rotated or revoked; rotation only affects the specified token.
+
+Audit logging
+- **System log**: Rotation, revocation and validation events are written to the PHP/system log as structured JSON entries prefixed with `pmpro-magic-levels-audit:`. In development these typically appear in `wp-content/debug.log` when `WP_DEBUG_LOG` is enabled.
+- **No raw tokens**: Logs never contain raw token values. Only token IDs, timestamps and limited metadata are recorded.
+
+Forwarding audit events
+If you want to forward audit events to an external logging service (Papertrail, Loggly, Sentry, etc.), hook into `pmpro_magic_levels_audit` from a mu-plugin or site plugin. Example (async HTTP forwarder):
+
+```php
+add_action('pmpro_magic_levels_audit', function( $entry ) {
+  wp_remote_post( 'https://logs.example.com/ingest', array(
+    'headers' => array(
+      'Content-Type' => 'application/json',
+      'Authorization' => 'Bearer YOUR_API_KEY',
+    ),
+    'body' => wp_json_encode( $entry ),
+    'timeout' => 5,
+    'blocking' => false,
+  ) );
+}, 10, 1 );
+```
+
+Recommendations
+- Use TLS for any remote logging endpoints and authenticate requests.
+- Mask or redact PII (IP addresses, emails) before forwarding if required by policy.
+- For production-grade auditing, consider shipping logs to a centralized logging system or migrating to a custom audit table in the database.
 - [ ] Implement request logging
 - [ ] Regular security audits
 

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Token Rotation (Manual)**: Admins can now rotate ("roll") existing bearer tokens from the PMPro > Magic Levels admin page. Rotation generates a new raw token, replaces the stored hash, and displays the new token once for secure copy.
+- **Lightweight Audit Logging**: Token lifecycle events (rotation, revocation, validation results) are written to the system/PHP log as structured JSON for development diagnostics. Integrators can forward these events to external logging systems via the new `pmpro_magic_levels_audit` action.
+
+### Fixed
+
+- **Prepared statement safety**: Fixed an issue in `find_matching_level()` where an array of values could be passed incorrectly to `$wpdb->prepare()`. The code now validates placeholder counts and uses argument unpacking to ensure prepared queries receive exact replacement values.
+
 ## [1.1.0] - 2024-12-12
 
 ### Added

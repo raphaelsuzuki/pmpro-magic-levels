@@ -344,6 +344,20 @@ add_filter('pmpro_magic_levels_enable_cache', '__return_true');
 add_filter('pmpro_magic_levels_cache_method', fn() => 'transient');
 ```
 
+## Token Rotation & Audit
+
+For convenience and security, admins can manually rotate ("roll") existing bearer tokens from the PMPro > Magic Levels admin page. Rotation immediately invalidates the previous token by replacing the stored hash and returns a new raw token exactly once; copy it and store it securely.
+
+Where to find the new token:
+- After rotation a success notice is shown in the admin UI containing the new token (displayed once).
+
+Audit logging:
+- Minimal lifecycle events (rotation, revocation, validation) are written to the PHP/system log as structured JSON prefixed with `pmpro-magic-levels-audit:`. For development this typically appears in `wp-content/debug.log` when `WP_DEBUG_LOG` is enabled.
+- If you want to forward audit entries to an external logging service (Papertrail, Loggly, Sentry, etc.), the plugin exposes a hook: `do_action('pmpro_magic_levels_audit', $entry)`. Use a small mu-plugin to forward entries securely.
+
+
+Security note: audit entries never contain raw token values. Only token IDs, timestamps and limited metadata are included. Mask any PII before forwarding to third-party systems.
+
 ## Documentation
 
 **[Complete Documentation](docs/Home.md)** - Full documentation in the `/docs` folder

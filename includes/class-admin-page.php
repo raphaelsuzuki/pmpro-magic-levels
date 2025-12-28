@@ -31,6 +31,7 @@ class PMPRO_Magic_Levels_Admin
 		add_action('admin_init', array(__CLASS__, 'register_settings'));
 		add_action('admin_post_pmpro_ml_test_webhook', array(__CLASS__, 'test_webhook'));
 		add_action('admin_post_pmpro_ml_create_token', array(__CLASS__, 'create_token'));
+		add_action('admin_post_pmpro_ml_rotate_token', array(__CLASS__, 'rotate_token'));
 		add_action('admin_post_pmpro_ml_revoke_token', array(__CLASS__, 'revoke_token'));
 		add_filter('debug_information', array(__CLASS__, 'add_site_health_info'));
 		add_filter('site_status_tests', array(__CLASS__, 'add_site_health_tests'));
@@ -148,6 +149,38 @@ class PMPRO_Magic_Levels_Admin
 			} else {
 				wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_error=' . urlencode(__('Failed to revoke token', 'pmpro-magic-levels'))));
 			}
+		}
+		exit;
+	}
+
+	/**
+	 * Rotate a token via admin-post action.
+	 *
+	 * @since 1.1.0
+	 * @return void
+	 */
+	public static function rotate_token()
+	{
+		check_admin_referer('pmpro_ml_rotate_token');
+
+		if (!current_user_can('manage_options')) {
+			wp_die(esc_html__('Unauthorized', 'pmpro-magic-levels'));
+		}
+
+		$token_id = isset($_POST['token_id']) ? sanitize_text_field($_POST['token_id']) : '';
+
+		if (class_exists('PMPRO_Magic_Levels_Token_Manager')) {
+			$result = PMPRO_Magic_Levels_Token_Manager::rotate_token($token_id);
+
+			if (is_wp_error($result)) {
+				wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_error=' . urlencode($result->get_error_message())));
+			} else {
+				// Redirect with the fresh token to show once.
+				set_transient('pmpro_ml_new_token_' . get_current_user_id(), $result, 60);
+				wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_rotated=1'));
+			}
+		} else {
+			wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_error=' . urlencode(__('Token Manager not loaded', 'pmpro-magic-levels'))));
 		}
 		exit;
 	}
@@ -348,6 +381,25 @@ class PMPRO_Magic_Levels_Admin
 				}
 			}
 
+			if (isset($_GET['token_rotated']) && $_GET['token_rotated']) {
+				$new_token_data = get_transient('pmpro_ml_new_token_' . get_current_user_id());
+				if ($new_token_data) {
+					delete_transient('pmpro_ml_new_token_' . get_current_user_id());
+					?>
+					<div class="notice notice-success is-dismissible">
+						<p><strong><?php esc_html_e('Token Rotated!', 'pmpro-magic-levels'); ?></strong></p>
+						<p>
+							<?php esc_html_e('Make sure to copy your new personal access token now. You won\'t be able to see it again!', 'pmpro-magic-levels'); ?>
+						</p>
+						<p>
+							<input type="text" readonly value="<?php echo esc_attr($new_token_data['token']); ?>"
+								class="large-text code" onclick="this.select();" style="font-weight: bold; color: #007cba;">
+						</p>
+					</div>
+					<?php
+				}
+			}
+
 			if (isset($_GET['token_revoked'])) {
 				?>
 				<div class="notice notice-success is-dismissible">
@@ -467,6 +519,17 @@ class PMPRO_Magic_Levels_Admin
 														style="color: #a00; text-decoration: none;"
 														onclick="return confirm('<?php echo esc_js(__('Are you sure you want to revoke this token?', 'pmpro-magic-levels')); ?>');">
 														<?php esc_html_e('Revoke', 'pmpro-magic-levels'); ?>
+													</button>
+												</form>
+
+												<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"
+													style="display:inline; margin-left:8px;">
+													<input type="hidden" name="action" value="pmpro_ml_rotate_token">
+													<input type="hidden" name="token_id" value="<?php echo esc_attr($id); ?>">
+													<?php wp_nonce_field('pmpro_ml_rotate_token'); ?>
+													<button type="submit" class="button-link"
+														style="text-decoration: none;">
+														<?php esc_html_e('Rotate', 'pmpro-magic-levels'); ?>
 													</button>
 												</form>
 											</td>
