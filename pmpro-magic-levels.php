@@ -3,7 +3,7 @@
  * Plugin Name: PMPro Magic Levels
  * Plugin URI: https://github.com/raphaelsuzuki/pmpro-magic-levels
  * Description: Create or find membership levels from form submissions and redirect to checkout
- * Version: 1.0.0
+ * Version: 1.2.0
  * Author: Raphael Suzuki
  * Author URI: https://github.com/raphaelsuzuki/pmpro-magic-levels
  * Text Domain: pmpro-magic-levels
@@ -19,7 +19,7 @@
 defined('ABSPATH') || exit;
 
 // Define plugin constants
-define('PMPRO_MAGIC_LEVELS_VERSION', '1.0.0');
+define('PMPRO_MAGIC_LEVELS_VERSION', '1.2.0');
 define('PMPRO_MAGIC_LEVELS_DIR', plugin_dir_path(__FILE__));
 define('PMPRO_MAGIC_LEVELS_URL', plugin_dir_url(__FILE__));
 
