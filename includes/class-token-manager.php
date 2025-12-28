@@ -134,6 +134,7 @@ class PMPRO_Magic_Levels_Token_Manager
         $tokens = get_option(self::$option_name, array());
 
         if (empty($tokens)) {
+            self::audit( 'validate_failed', null, array( 'reason' => 'no_tokens' ) );
             return false;
         }
 
@@ -142,10 +143,12 @@ class PMPRO_Magic_Levels_Token_Manager
         foreach ($tokens as $id => $data) {
             if (hash_equals($data['hash'], $hashed_input)) {
                 self::record_usage($id);
+                self::audit( 'validate_success', $id, array( 'method' => 'rest' ) );
                 return $id;
             }
         }
 
+        self::audit( 'validate_failed', null, array( 'reason' => 'hash_mismatch' ) );
         return false;
     }
 
