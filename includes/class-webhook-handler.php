@@ -231,10 +231,27 @@ class PMPRO_Magic_Levels_Webhook_Handler
 
 
 		// Return response.
-		if ($result['success']) {
-			return new WP_REST_Response($result, 200);
+		if ( $result['success'] ) {
+			return new WP_REST_Response( $result, 200 );
 		} else {
-			return new WP_REST_Response($result, 400);
+			// Default to 400 for validation errors, but map rate limit errors to
+			// 429 Too Many Requests and include a Retry-After header when
+			// `retry_after` is provided by the validator.
+			$status = 400;
+			$response = new WP_REST_Response( $result, $status );
+
+			if ( isset( $result['code'] ) && 'rate_limit_exceeded' === $result['code'] ) {
+				$status = 429;
+				$response = new WP_REST_Response( $result, $status );
+
+				if ( isset( $result['retry_after'] ) ) {
+					$retry_after = intval( $result['retry_after'] );
+					// Add Retry-After header in seconds.
+					$response->header( 'Retry-After', $retry_after );
+				}
+			}
+
+			return $response;
 		}
 	}
 }

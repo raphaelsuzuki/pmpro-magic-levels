@@ -269,9 +269,17 @@ class PMPRO_Magic_Levels_Validator {
 		}
 
 		if ( $requests >= $rate_limit['max_requests'] ) {
-			$ttl     = get_option( '_transient_timeout_' . $transient_key ) - time();
+			$ttl = max( 0, get_option( '_transient_timeout_' . $transient_key ) - time() );
 			$minutes = ceil( $ttl / 60 );
-			return $this->error( "Rate limit exceeded. Try again in {$minutes} minutes.", 'rate_limit_exceeded' );
+			// Return retry information so callers can map to HTTP 429 and send
+			// a Retry-After header. Keep the existing error shape for
+			// backwards compatibility and include `retry_after` in seconds.
+			return array(
+				'valid'       => false,
+				'error'       => sprintf( 'Rate limit exceeded. Try again in %d minutes.', $minutes ),
+				'code'        => 'rate_limit_exceeded',
+				'retry_after' => $ttl,
+			);
 		}
 
 		set_transient( $transient_key, $requests + 1, $rate_limit['time_window'] );
