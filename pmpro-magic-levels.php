@@ -13,7 +13,7 @@
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * GitHub Plugin URI: https://github.com/raphaelsuzuki/pmpro-magic-levels
- * GitHub Branch: master
+ * GitHub Branch: main
  */
 
 defined( 'ABSPATH' ) || exit;
