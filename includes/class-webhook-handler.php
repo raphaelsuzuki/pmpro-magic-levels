@@ -6,7 +6,7 @@
  * @since 1.0.0
  */
 
-defined('ABSPATH') || exit;
+defined( 'ABSPATH' ) || exit;
 
 /**
  * PMPRO_Magic_Levels_Webhook_Handler class.
@@ -15,8 +15,7 @@ defined('ABSPATH') || exit;
  *
  * @since 1.0.0
  */
-class PMPRO_Magic_Levels_Webhook_Handler
-{
+class PMPRO_Magic_Levels_Webhook_Handler {
 
 	/**
 	 * Initialize webhook handler.
@@ -25,9 +24,8 @@ class PMPRO_Magic_Levels_Webhook_Handler
 	 *
 	 * @return void
 	 */
-	public static function init()
-	{
-		add_action('rest_api_init', array(__CLASS__, 'register_routes'));
+	public static function init() {
+		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
 	}
 
 	/**
@@ -37,11 +35,10 @@ class PMPRO_Magic_Levels_Webhook_Handler
 	 *
 	 * @return void
 	 */
-	public static function register_routes()
-	{
+	public static function register_routes() {
 		// Check if webhook is enabled. Defaults to false (0) for new installations.
-		$is_enabled = get_option('pmpro_ml_webhook_enabled', '0') === '1';
-		if (!apply_filters('pmpro_magic_levels_enable_webhook', $is_enabled)) {
+		$is_enabled = get_option( 'pmpro_ml_webhook_enabled', '0' ) === '1';
+		if ( ! apply_filters( 'pmpro_magic_levels_enable_webhook', $is_enabled ) ) {
 			return;
 		}
 
@@ -49,9 +46,9 @@ class PMPRO_Magic_Levels_Webhook_Handler
 			'pmpro-magic-levels/v1',
 			'/process',
 			array(
-				'methods' => 'POST',
-				'callback' => array(__CLASS__, 'process_request'),
-				'permission_callback' => array(__CLASS__, 'check_permissions'),
+				'methods'             => 'POST',
+				'callback'            => array( __CLASS__, 'process_request' ),
+				'permission_callback' => array( __CLASS__, 'check_permissions' ),
 			)
 		);
 	}
@@ -64,42 +61,41 @@ class PMPRO_Magic_Levels_Webhook_Handler
 	 * @param WP_REST_Request $request Request object.
 	 * @return bool|WP_Error True if authorized, WP_Error otherwise.
 	 */
-	public static function check_permissions($request)
-	{
+	public static function check_permissions( $request ) {
 		// Get Bearer token from Authorization header.
-		$auth_header = $request->get_header('authorization');
+		$auth_header = $request->get_header( 'authorization' );
 
-		if (empty($auth_header)) {
+		if ( empty( $auth_header ) ) {
 			return new WP_Error(
 				'missing_authorization',
-				__('Missing Authorization header. Include: Authorization: Bearer YOUR_TOKEN', 'pmpro-magic-levels'),
-				array('status' => 401)
+				__( 'Missing Authorization header. Include: Authorization: Bearer YOUR_TOKEN', 'pmpro-magic-levels' ),
+				array( 'status' => 401 )
 			);
 		}
 
 		// Extract token from "Bearer TOKEN" format.
-		if (!preg_match('/Bearer\s+(.*)$/i', $auth_header, $matches)) {
+		if ( ! preg_match( '/Bearer\s+(.*)$/i', $auth_header, $matches ) ) {
 			return new WP_Error(
 				'invalid_authorization_format',
-				__('Invalid Authorization header format. Use: Authorization: Bearer YOUR_TOKEN', 'pmpro-magic-levels'),
-				array('status' => 401)
+				__( 'Invalid Authorization header format. Use: Authorization: Bearer YOUR_TOKEN', 'pmpro-magic-levels' ),
+				array( 'status' => 401 )
 			);
 		}
 
-		$provided_token = trim($matches[1]);
+		$provided_token = trim( $matches[1] );
 
 		// Verify token using timing-safe comparison.
 		// Check against Token Manager.
-		if (class_exists('PMPRO_Magic_Levels_Token_Manager')) {
-			if (PMPRO_Magic_Levels_Token_Manager::validate_token($provided_token)) {
+		if ( class_exists( 'PMPRO_Magic_Levels_Token_Manager' ) ) {
+			if ( PMPRO_Magic_Levels_Token_Manager::validate_token( $provided_token ) ) {
 				return true;
 			}
 		}
 
 		return new WP_Error(
 			'invalid_token',
-			__('Invalid bearer token', 'pmpro-magic-levels'),
-			array('status' => 403)
+			__( 'Invalid bearer token', 'pmpro-magic-levels' ),
+			array( 'status' => 403 )
 		);
 	}
 
@@ -170,13 +166,12 @@ class PMPRO_Magic_Levels_Webhook_Handler
 	 * @param WP_REST_Request $request Request object.
 	 * @return WP_REST_Response Response object.
 	 */
-	public static function process_request($request)
-	{
+	public static function process_request( $request ) {
 		// Get request data.
 		$params = $request->get_json_params();
 
 		// Process level.
-		$result = pmpro_magic_levels_process($params);
+		$result = pmpro_magic_levels_process( $params );
 
 		// Safer debug handling: server-side logging is now opt-in. By default
 		// we do NOT write request params to the system log. Integrators can
@@ -221,12 +216,10 @@ class PMPRO_Magic_Levels_Webhook_Handler
 			if ( $allow_debug && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 				$result['debug'] = array(
 					'received_params' => self::redact_debug_params( $params ),
-					'timestamp' => current_time( 'mysql' ),
+					'timestamp'       => current_time( 'mysql' ),
 				);
 			}
 		}
-
-
 
 		// Return response.
 		if ( $result['success'] ) {
@@ -235,11 +228,11 @@ class PMPRO_Magic_Levels_Webhook_Handler
 			// Default to 400 for validation errors, but map rate limit errors to
 			// 429 Too Many Requests and include a Retry-After header when
 			// `retry_after` is provided by the validator.
-			$status = 400;
+			$status   = 400;
 			$response = new WP_REST_Response( $result, $status );
 
 			if ( isset( $result['code'] ) && 'rate_limit_exceeded' === $result['code'] ) {
-				$status = 429;
+				$status   = 429;
 				$response = new WP_REST_Response( $result, $status );
 
 				if ( isset( $result['retry_after'] ) ) {

@@ -16,12 +16,12 @@
  * GitHub Branch: master
  */
 
-defined('ABSPATH') || exit;
+defined( 'ABSPATH' ) || exit;
 
 // Define plugin constants
-define('PMPRO_MAGIC_LEVELS_VERSION', '1.2.0');
-define('PMPRO_MAGIC_LEVELS_DIR', plugin_dir_path(__FILE__));
-define('PMPRO_MAGIC_LEVELS_URL', plugin_dir_url(__FILE__));
+define( 'PMPRO_MAGIC_LEVELS_VERSION', '1.2.0' );
+define( 'PMPRO_MAGIC_LEVELS_DIR', plugin_dir_path( __FILE__ ) );
+define( 'PMPRO_MAGIC_LEVELS_URL', plugin_dir_url( __FILE__ ) );
 
 /**
  * Check if PMPro is active.
@@ -30,10 +30,9 @@ define('PMPRO_MAGIC_LEVELS_URL', plugin_dir_url(__FILE__));
  *
  * @return bool True if PMPro is active, false otherwise.
  */
-function pmpro_magic_levels_check_dependencies()
-{
-	if (!defined('PMPRO_VERSION')) {
-		add_action('admin_notices', 'pmpro_magic_levels_dependency_notice');
+function pmpro_magic_levels_check_dependencies() {
+	if ( ! defined( 'PMPRO_VERSION' ) ) {
+		add_action( 'admin_notices', 'pmpro_magic_levels_dependency_notice' );
 		return false;
 	}
 	return true;
@@ -46,11 +45,10 @@ function pmpro_magic_levels_check_dependencies()
  *
  * @return void
  */
-function pmpro_magic_levels_dependency_notice()
-{
+function pmpro_magic_levels_dependency_notice() {
 	?>
 	<div class="error">
-		<p><?php esc_html_e('PMPro Magic Levels requires Paid Memberships Pro to be installed and activated.', 'pmpro-magic-levels'); ?>
+		<p><?php esc_html_e( 'PMPro Magic Levels requires Paid Memberships Pro to be installed and activated.', 'pmpro-magic-levels' ); ?>
 		</p>
 	</div>
 	<?php
@@ -63,10 +61,9 @@ function pmpro_magic_levels_dependency_notice()
  *
  * @return void
  */
-function pmpro_magic_levels_init()
-{
+function pmpro_magic_levels_init() {
 	// Check dependencies.
-	if (!pmpro_magic_levels_check_dependencies()) {
+	if ( ! pmpro_magic_levels_check_dependencies() ) {
 		return;
 	}
 
@@ -81,19 +78,19 @@ function pmpro_magic_levels_init()
 	PMPRO_Magic_Levels_Webhook_Handler::init();
 
 	// Setup cache invalidation hooks.
-	add_action('pmpro_added_membership_level', 'pmpro_magic_levels_clear_cache');
-	add_action('pmpro_updated_membership_level', 'pmpro_magic_levels_clear_cache');
-	add_action('pmpro_deleted_membership_level', 'pmpro_magic_levels_clear_cache');
+	add_action( 'pmpro_added_membership_level', 'pmpro_magic_levels_clear_cache' );
+	add_action( 'pmpro_updated_membership_level', 'pmpro_magic_levels_clear_cache' );
+	add_action( 'pmpro_deleted_membership_level', 'pmpro_magic_levels_clear_cache' );
 	// Initialize admin interface.
-	if (is_admin()) {
-		require_once plugin_dir_path(__FILE__) . 'includes/class-admin-page.php';
+	if ( is_admin() ) {
+		require_once plugin_dir_path( __FILE__ ) . 'includes/class-admin-page.php';
 		PMPRO_Magic_Levels_Admin::init();
 	}
 
 	// Load integrations.
 	pmpro_magic_levels_load_integrations();
 }
-add_action('plugins_loaded', 'pmpro_magic_levels_init');
+add_action( 'plugins_loaded', 'pmpro_magic_levels_init' );
 
 /**
  * Load form plugin integrations.
@@ -102,8 +99,7 @@ add_action('plugins_loaded', 'pmpro_magic_levels_init');
  *
  * @return void
  */
-function pmpro_magic_levels_load_integrations()
-{
+function pmpro_magic_levels_load_integrations() {
 	// Future integrations for form plugins that support webhook response handling.
 
 	// Note: Contact Form 7 is NOT compatible with the webhook approach.
@@ -124,8 +120,7 @@ function pmpro_magic_levels_load_integrations()
  *
  * @return void
  */
-function pmpro_magic_levels_clear_cache()
-{
+function pmpro_magic_levels_clear_cache() {
 	PMPRO_Magic_Levels_Cache::clear_all();
 }
 
@@ -137,49 +132,48 @@ function pmpro_magic_levels_clear_cache()
  * @param array $level_data Level parameters.
  * @return array Result with success, level_id, redirect_url, or error.
  */
-function pmpro_magic_levels_process($level_data)
-{
+function pmpro_magic_levels_process( $level_data ) {
 	// Validate.
-	$validator = new PMPRO_Magic_Levels_Validator();
-	$validation = $validator->validate($level_data);
+	$validator  = new PMPRO_Magic_Levels_Validator();
+	$validation = $validator->validate( $level_data );
 
-	if (!$validation['valid']) {
+	if ( ! $validation['valid'] ) {
 		return array(
 			'success' => false,
-			'error' => $validation['error'],
-			'code' => $validation['code'],
+			'error'   => $validation['error'],
+			'code'    => $validation['code'],
 		);
 	}
 
 	// Find or create level.
 	$matcher = new PMPRO_Magic_Levels_Level_Matcher();
-	$result = $matcher->find_or_create($level_data);
+	$result  = $matcher->find_or_create( $level_data );
 
-	if (!$result['success']) {
+	if ( ! $result['success'] ) {
 		return $result;
 	}
 
 	// Generate redirect URL.
 	$redirect_url = '';
-	if (function_exists('pmpro_url')) {
-		$redirect_url = pmpro_url('checkout', '?pmpro_level=' . $result['level_id']);
+	if ( function_exists( 'pmpro_url' ) ) {
+		$redirect_url = pmpro_url( 'checkout', '?pmpro_level=' . $result['level_id'] );
 	} else {
 		$checkout_url = apply_filters(
 			'pmpro_magic_levels_checkout_url',
-			home_url('/membership-checkout/'),
+			home_url( '/membership-checkout/' ),
 			$result['level_id'],
 			$level_data
 		);
-		$redirect_url = add_query_arg('pmpro_level', $result['level_id'], $checkout_url);
+		$redirect_url = add_query_arg( 'pmpro_level', $result['level_id'], $checkout_url );
 	}
 
 	return array(
-		'success' => true,
-		'level_id' => $result['level_id'],
-		'redirect_url' => $redirect_url,
+		'success'       => true,
+		'level_id'      => $result['level_id'],
+		'redirect_url'  => $redirect_url,
 		'level_created' => $result['level_created'],
-		'cached' => isset($result['cached']) ? $result['cached'] : false,
-		'message' => $result['level_created'] ? 'New level created' : 'Existing level found',
+		'cached'        => isset( $result['cached'] ) ? $result['cached'] : false,
+		'message'       => $result['level_created'] ? 'New level created' : 'Existing level found',
 	);
 }
 
@@ -190,12 +184,11 @@ function pmpro_magic_levels_process($level_data)
  *
  * @return void
  */
-function pmpro_magic_levels_activate()
-{
+function pmpro_magic_levels_activate() {
 	// Check if PMPro is active.
-	if (!defined('PMPRO_VERSION')) {
-		deactivate_plugins(plugin_basename(__FILE__));
-		wp_die(esc_html__('PMPro Magic Levels requires Paid Memberships Pro to be installed and activated.', 'pmpro-magic-levels'));
+	if ( ! defined( 'PMPRO_VERSION' ) ) {
+		deactivate_plugins( plugin_basename( __FILE__ ) );
+		wp_die( esc_html__( 'PMPro Magic Levels requires Paid Memberships Pro to be installed and activated.', 'pmpro-magic-levels' ) );
 	}
 
 	// Add database index for faster lookups.
@@ -210,7 +203,7 @@ function pmpro_magic_levels_activate()
 		)
 	);
 
-	if (empty($index_exists)) {
+	if ( empty( $index_exists ) ) {
 		$wpdb->query(
 			"CREATE INDEX idx_magic_level_lookup 
 			ON {$table_name} (name(50), billing_amount, cycle_period(10), cycle_number)"
@@ -218,9 +211,9 @@ function pmpro_magic_levels_activate()
 	}
 
 	// Disable webhook by default on new installations.
-	add_option('pmpro_ml_webhook_enabled', '0');
+	add_option( 'pmpro_ml_webhook_enabled', '0' );
 }
-register_activation_hook(__FILE__, 'pmpro_magic_levels_activate');
+register_activation_hook( __FILE__, 'pmpro_magic_levels_activate' );
 
 /**
  * Plugin deactivation.
@@ -229,9 +222,8 @@ register_activation_hook(__FILE__, 'pmpro_magic_levels_activate');
  *
  * @return void
  */
-function pmpro_magic_levels_deactivate()
-{
+function pmpro_magic_levels_deactivate() {
 	// Clear all caches.
 	pmpro_magic_levels_clear_cache();
 }
-register_deactivation_hook(__FILE__, 'pmpro_magic_levels_deactivate');
+register_deactivation_hook( __FILE__, 'pmpro_magic_levels_deactivate' );
