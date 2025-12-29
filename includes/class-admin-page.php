@@ -861,7 +861,7 @@ class PMPRO_Magic_Levels_Admin
 
 					<p class="description">
 						<?php esc_html_e('Use these filters in your theme or plugin to customize validation rules.', 'pmpro-magic-levels'); ?>
-						<a href="https://github.com/raphaelsuzuki/pmpro-magic-levels/blob/master/docs/reference/advanced-validation.md"
+						<a href="https://github.com/raphaelsuzuki/pmpro-magic-levels/wiki/Advanced-Validation"
 							target="_blank"><?php esc_html_e('View advanced validation examples →', 'pmpro-magic-levels'); ?></a>
 					</p>
 				</div>
