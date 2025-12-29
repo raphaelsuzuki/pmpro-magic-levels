@@ -119,20 +119,21 @@ class PMPRO_Magic_Levels_Webhook_Handler
 
 		// Default sensitive keys to redact (case-insensitive substring match).
 		$sensitive_keys = array(
-			'authorization', 'auth', 'token', 'password', 'pass', 'card_number', 'cc', 'credit_card', 'email'
+			'authorization', 'auth', 'token', 'password', 'pass',
+			'card_number', 'cc', 'credit_card', 'cvv', 'security_code',
+			'email', 'e-mail', 'first_name', 'last_name', 'name', 'full_name',
+			'phone', 'mobile', 'msisdn', 'address', 'street', 'city', 'state',
+			'zip', 'postal', 'postal_code', 'ssn', 'sin', 'dob', 'birth',
+			'bank', 'iban', 'routing', 'account_number'
 		);
 
 		$sensitive_keys = apply_filters( 'pmpro_magic_levels_debug_sensitive_keys', $sensitive_keys );
 
-		$redact_value = function( $value ) {
-			if ( is_string( $value ) ) {
-				// Keep a short prefix and mask the rest. Use mb_substr when available.
-				if ( function_exists( 'mb_substr' ) ) {
-					return mb_substr( $value, 0, 4 ) . '…';
-				}
-				return substr( $value, 0, 4 ) . '…';
-			}
-			return 'redacted';
+		// Default redaction placeholder — configurable by integrators.
+		$redaction_placeholder = apply_filters( 'pmpro_magic_levels_redaction_placeholder', '[REDACTED]' );
+
+		$redact_value = function( $value ) use ( $redaction_placeholder ) {
+			return $redaction_placeholder;
 		};
 
 		$walk = function( $arr ) use ( &$walk, $sensitive_keys, $redact_value ) {
@@ -154,6 +155,12 @@ class PMPRO_Magic_Levels_Webhook_Handler
 
 		$safe = $walk( $params );
 
+		/**
+		 * Filter the redacted params after the default redaction has been applied.
+		 *
+		 * Allows integrators to further sanitize or remove fields. Expected
+		 * signature: function( array $redacted_params, array $original_params )
+		 */
 		return apply_filters( 'pmpro_magic_levels_redact_debug_params', $safe, $params );
 	}
 
@@ -173,32 +180,49 @@ class PMPRO_Magic_Levels_Webhook_Handler
 		// Process level.
 		$result = pmpro_magic_levels_process($params);
 
-		// Safer debug handling: always log a redacted copy server-side, but
-		// only include debug information in the HTTP response when explicitly
-		// enabled via filter and WP_DEBUG is active.
+		// Safer debug handling: server-side logging is now opt-in. By default
+		// we do NOT write request params to the system log. Integrators can
+		// enable logging and control whether redacted params are included.
 		if ( ! $result['success'] ) {
-			$redacted = self::redact_debug_params( $params );
+			$allow_log = apply_filters( 'pmpro_magic_levels_allow_debug_log', false );
+			if ( $allow_log ) {
+				$include_params = apply_filters( 'pmpro_magic_levels_debug_log_include_params', false );
+				$include_fingerprint = apply_filters( 'pmpro_magic_levels_debug_log_include_fingerprint', true );
 
-			// Server-side log for forensics (redacted). Limit size to avoid huge log lines.
-			$log_entry = array(
-				'timestamp' => current_time( 'mysql' ),
-				'route'     => 'pmpro-magic-levels/v1/process',
-				'params'    => $redacted,
-			);
+				$raw_payload = '';
+				if ( function_exists( 'wp_json_encode' ) ) {
+					$raw_payload = wp_json_encode( $params );
+				} else {
+					$raw_payload = json_encode( $params );
+				}
 
-			$payload = function_exists( 'wp_json_encode' ) ? wp_json_encode( $log_entry ) : json_encode( $log_entry );
-			$max_len = apply_filters( 'pmpro_magic_levels_debug_log_max_length', 10000 );
-			if ( strlen( $payload ) > $max_len ) {
-				$payload = substr( $payload, 0, $max_len ) . '...';
+				$log_entry = array(
+					'timestamp' => current_time( 'mysql' ),
+					'route'     => 'pmpro-magic-levels/v1/process',
+				);
+
+				if ( $include_fingerprint ) {
+					$log_entry['params_hash'] = hash( 'sha256', $raw_payload );
+				}
+
+				if ( $include_params ) {
+					$log_entry['params'] = self::redact_debug_params( $params );
+				}
+
+				$payload = function_exists( 'wp_json_encode' ) ? wp_json_encode( $log_entry ) : json_encode( $log_entry );
+				$max_len = apply_filters( 'pmpro_magic_levels_debug_log_max_length', 10000 );
+				if ( strlen( $payload ) > $max_len ) {
+					$payload = substr( $payload, 0, $max_len ) . '...';
+				}
+				error_log( 'pmpro-magic-levels-debug: ' . $payload );
 			}
-			error_log( 'pmpro-magic-levels-debug: ' . $payload );
 
 			// Only include debug payload in response when both WP_DEBUG is
 			// enabled and the allow filter is explicitly turned on.
 			$allow_debug = apply_filters( 'pmpro_magic_levels_allow_debug_output', false );
 			if ( $allow_debug && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 				$result['debug'] = array(
-					'received_params' => $redacted,
+					'received_params' => self::redact_debug_params( $params ),
 					'timestamp' => current_time( 'mysql' ),
 				);
 			}
