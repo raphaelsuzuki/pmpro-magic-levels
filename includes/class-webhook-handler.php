@@ -101,8 +101,6 @@ class PMPRO_Magic_Levels_Webhook_Handler
 			__('Invalid bearer token', 'pmpro-magic-levels'),
 			array('status' => 403)
 		);
-
-		return true;
 	}
 
 	/**
