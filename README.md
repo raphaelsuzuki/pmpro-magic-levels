@@ -2,6 +2,8 @@
 
 Dynamically create or find membership levels from user interactions, then automatically redirect users to checkout—no manual creation of every membership variation in the admin dashboard. Integrate with your form plugins, page builders, help desk, and workflow automations to give your membership site more power and flexibility. 
 
+**Notice:** This plugin is intended for developers and integrators. It exposes a powerful REST webhook and writes membership data based on incoming payloads. Do not send payment card numbers, CVV, or other sensitive personal data to this endpoint. Server-side debug logging of request parameters is disabled by default and requires explicit opt-in; changing redaction behavior or enabling logs should only be done by experienced developers who understand the security and compliance implications.
+
 # Features
 
 - **Dynamic Level Creation**: Generate membership levels on-demand from form submissions or API calls without pre-creating every possible variation
