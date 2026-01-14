@@ -182,12 +182,7 @@ class PMPRO_Magic_Levels_Webhook_Handler {
 				$include_params = apply_filters( 'pmpro_magic_levels_debug_log_include_params', false );
 				$include_fingerprint = apply_filters( 'pmpro_magic_levels_debug_log_include_fingerprint', true );
 
-				$raw_payload = '';
-				if ( function_exists( 'wp_json_encode' ) ) {
-					$raw_payload = wp_json_encode( $params );
-				} else {
-					$raw_payload = json_encode( $params );
-				}
+				$raw_payload = wp_json_encode( $params );
 
 				$log_entry = array(
 					'timestamp' => current_time( 'mysql' ),
@@ -202,7 +197,7 @@ class PMPRO_Magic_Levels_Webhook_Handler {
 					$log_entry['params'] = self::redact_debug_params( $params );
 				}
 
-				$payload = function_exists( 'wp_json_encode' ) ? wp_json_encode( $log_entry ) : json_encode( $log_entry );
+				$payload = wp_json_encode( $log_entry );
 				$max_len = apply_filters( 'pmpro_magic_levels_debug_log_max_length', 10000 );
 				if ( strlen( $payload ) > $max_len ) {
 					$payload = substr( $payload, 0, $max_len ) . '...';

@@ -96,102 +96,35 @@ class PMPRO_Magic_Levels_Level_Matcher
 	{
 		global $wpdb;
 
-		// Build WHERE clause for exact match.
-		$where_conditions = array('1=1');
-		$where_values = array();
+		// Build query parameters with defaults
+		$query_params = array(
+			'name' => $params['name'],
+			'billing_amount' => isset($params['billing_amount']) ? floatval($params['billing_amount']) : 0,
+			'cycle_number' => isset($params['cycle_number']) ? intval($params['cycle_number']) : 0,
+			'cycle_period' => isset($params['cycle_period']) ? $params['cycle_period'] : '',
+			'initial_payment' => isset($params['initial_payment']) ? floatval($params['initial_payment']) : 0,
+			'trial_amount' => isset($params['trial_amount']) ? floatval($params['trial_amount']) : 0,
+			'trial_limit' => isset($params['trial_limit']) ? intval($params['trial_limit']) : 0,
+			'billing_limit' => isset($params['billing_limit']) ? intval($params['billing_limit']) : 0,
+			'expiration_number' => isset($params['expiration_number']) ? intval($params['expiration_number']) : 0,
+			'expiration_period' => isset($params['expiration_period']) ? $params['expiration_period'] : '',
+		);
 
-		// Name (required).
-		$where_conditions[] = 'name = %s';
-		$where_values[] = $params['name'];
+		// Build query
+		$query = "SELECT id FROM {$wpdb->pmpro_membership_levels} 
+				  WHERE name = %s 
+				  AND billing_amount = %f 
+				  AND cycle_number = %d 
+				  AND cycle_period = %s 
+				  AND initial_payment = %f 
+				  AND trial_amount = %f 
+				  AND trial_limit = %d 
+				  AND billing_limit = %d 
+				  AND expiration_number = %d 
+				  AND expiration_period = %s 
+				  LIMIT 1";
 
-		// Billing amount.
-		$billing_amount = isset($params['billing_amount']) ? floatval($params['billing_amount']) : 0;
-		$where_conditions[] = 'billing_amount = %f';
-		$where_values[] = $billing_amount;
-
-		// Cycle number.
-		$cycle_number = isset($params['cycle_number']) ? intval($params['cycle_number']) : 0;
-		$where_conditions[] = 'cycle_number = %d';
-		$where_values[] = $cycle_number;
-
-		// Cycle period.
-		$cycle_period = isset($params['cycle_period']) ? $params['cycle_period'] : '';
-		$where_conditions[] = 'cycle_period = %s';
-		$where_values[] = $cycle_period;
-
-		// Initial payment.
-		$initial_payment = isset($params['initial_payment']) ? floatval($params['initial_payment']) : 0;
-		$where_conditions[] = 'initial_payment = %f';
-		$where_values[] = $initial_payment;
-
-		// Trial amount.
-		$trial_amount = isset($params['trial_amount']) ? floatval($params['trial_amount']) : 0;
-		$where_conditions[] = 'trial_amount = %f';
-		$where_values[] = $trial_amount;
-
-		// Trial limit.
-		$trial_limit = isset($params['trial_limit']) ? intval($params['trial_limit']) : 0;
-		$where_conditions[] = 'trial_limit = %d';
-		$where_values[] = $trial_limit;
-
-		// Billing limit.
-		$billing_limit = isset($params['billing_limit']) ? intval($params['billing_limit']) : 0;
-		$where_conditions[] = 'billing_limit = %d';
-		$where_values[] = $billing_limit;
-
-		// Expiration number.
-		$expiration_number = isset($params['expiration_number']) ? intval($params['expiration_number']) : 0;
-		$where_conditions[] = 'expiration_number = %d';
-		$where_values[] = $expiration_number;
-
-		// Expiration period.
-		$expiration_period = isset($params['expiration_period']) ? $params['expiration_period'] : '';
-		$where_conditions[] = 'expiration_period = %s';
-		$where_values[] = $expiration_period;
-
-		// Build query.
-		$where_clause = implode(' AND ', $where_conditions);
-		$query = "SELECT id FROM {$wpdb->pmpro_membership_levels} WHERE {$where_clause} LIMIT 1";
-
-		// Sanity-check: ensure the number of placeholders in the query matches
-		// the number of provided values. This prevents malformed prepared
-		// statements and avoids accidental passing of a single array to
-		// $wpdb->prepare() (a common mistake).
-		$placeholder_count = preg_match_all( '/%[sdfo]/', $query, $placeholder_matches ) ? count( $placeholder_matches[0] ) : 0;
-		$provided_count  = is_array( $where_values ) ? count( $where_values ) : 0;
-
-		// Auto-unwrap a common mistake where callers pass a single array
-		// containing all values (e.g. $wpdb->prepare( $sql, $values_array ) ).
-		if ( 1 === $provided_count && isset( $where_values[0] ) && is_array( $where_values[0] ) ) {
-			$where_values   = $where_values[0];
-			$provided_count = count( $where_values );
-		}
-
-		if ( $placeholder_count !== $provided_count ) {
-			// Log helpful debug information when WP_DEBUG is enabled.
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log( sprintf(
-					'pmpro-magic-levels: Placeholder count mismatch in %s. Query expects %d placeholders but %d values provided. Query: %s',
-					__METHOD__,
-					$placeholder_count,
-					$provided_count,
-					$query
-				) );
-			}
-
-			// By default, do NOT attempt to run a mismatched prepare call. This
-			// is the safest option. If you need to preserve the previous
-			// (potentially unsafe) behavior for backwards compatibility,
-			// explicitly enable the filter below.
-			if ( apply_filters( 'pmpro_magic_levels_allow_prepare_fallback', false ) ) {
-				$level_id = $wpdb->get_var( $wpdb->prepare( $query, ...$where_values ) );
-			} else {
-				return null;
-			}
-		} else {
-			// Execute prepared query using argument unpacking.
-			$level_id = $wpdb->get_var( $wpdb->prepare( $query, ...$where_values ) );
-		}
+		$level_id = $wpdb->get_var( $wpdb->prepare( $query, ...array_values($query_params) ) );
 
 		return $level_id ? intval($level_id) : null;
 	}
@@ -309,36 +242,36 @@ class PMPRO_Magic_Levels_Level_Matcher
 	}
 
 	/**
-	 * Assign protected pages to a level.
+	 * Assign protected pages/posts to a level.
 	 *
-	 * Adds this level to the page's existing restrictions (doesn't replace).
+	 * Adds this level to the page/post's existing restrictions (doesn't replace).
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param int   $level_id Level ID.
-	 * @param array $page_ids Array of page IDs.
+	 * @param array $post_ids Array of page/post IDs.
 	 * @return void
 	 */
-	private function assign_protected_pages($level_id, $page_ids)
+	private function assign_protected_pages($level_id, $post_ids)
 	{
 		global $wpdb;
 
-		// Sanitize page IDs.
-		$page_ids = array_map('intval', $page_ids);
-		$page_ids = array_filter($page_ids, function ($id) {
+		// Sanitize post IDs.
+		$post_ids = array_map('intval', $post_ids);
+		$post_ids = array_filter($post_ids, function ($id) {
 			return $id > 0;
 		});
 
-		if (empty($page_ids)) {
+		if (empty($post_ids)) {
 			return;
 		}
 
-		foreach ($page_ids as $page_id) {
-			// Get existing level restrictions for this page.
+		foreach ($post_ids as $post_id) {
+			// Get existing level restrictions for this post.
 			$existing_levels = $wpdb->get_col(
 				$wpdb->prepare(
 					"SELECT membership_id FROM {$wpdb->pmpro_memberships_pages} WHERE page_id = %d",
-					$page_id
+					$post_id
 				)
 			);
 
@@ -349,14 +282,14 @@ class PMPRO_Magic_Levels_Level_Matcher
 
 			// Use PMPro's function if available (PMPro 3.1+).
 			if (function_exists('pmpro_update_post_level_restrictions')) {
-				pmpro_update_post_level_restrictions($page_id, $existing_levels);
+				pmpro_update_post_level_restrictions($post_id, $existing_levels);
 			} else {
 				// Fallback: Insert directly.
 				$wpdb->insert(
 					$wpdb->pmpro_memberships_pages,
 					array(
 						'membership_id' => $level_id,
-						'page_id'       => $page_id,
+						'page_id'       => $post_id,
 					),
 					array('%d', '%d')
 				);
@@ -366,8 +299,6 @@ class PMPRO_Magic_Levels_Level_Matcher
 
 	/**
 	 * Assign protected posts to a level.
-	 *
-	 * Adds this level to the post's existing restrictions (doesn't replace).
 	 *
 	 * @since 1.0.0
 	 *

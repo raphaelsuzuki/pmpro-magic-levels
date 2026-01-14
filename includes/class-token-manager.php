@@ -228,11 +228,8 @@ class PMPRO_Magic_Levels_Token_Manager
         );
 
         // Structured JSON to system log.
-        if ( function_exists( 'wp_json_encode' ) ) {
-            error_log( 'pmpro-magic-levels-audit: ' . wp_json_encode( $entry ) );
-        } else {
-            error_log( 'pmpro-magic-levels-audit: ' . json_encode( $entry ) );
-        }
+        $json = wp_json_encode( $entry );
+        error_log( 'pmpro-magic-levels-audit: ' . $json );
 
         /**
          * Action hook for external logging integrations.

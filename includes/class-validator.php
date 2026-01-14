@@ -84,52 +84,36 @@ class PMPRO_Magic_Levels_Validator {
 		}
 
 		// Validate prices.
-		if ( isset( $data['billing_amount'] ) ) {
-			// Parse formatted currency strings (e.g., "¥219,450" or "$1,234.56").
-			if ( is_string( $data['billing_amount'] ) ) {
-				$data['billing_amount'] = preg_replace( '/[^0-9.]/', '', $data['billing_amount'] );
-			}
-			$billing_amount = floatval( $data['billing_amount'] );
-
-			// Check if it's a valid number (not negative).
-			if ( $billing_amount < 0 ) {
-				return $this->error( 'Price cannot be negative', 'invalid_price' );
-			}
+		$billing_amount = $this->get_validated_param( $data, 'billing_amount', 0, 'float' );
+		if ( $billing_amount < 0 ) {
+			return $this->error( 'Price cannot be negative', 'invalid_price' );
 		}
 
 		// Validate initial payment.
-		if ( isset( $data['initial_payment'] ) ) {
-			$initial_payment = floatval( $data['initial_payment'] );
-
-			if ( $rules['require_initial_payment'] && 0 === $initial_payment ) {
-				return $this->error( 'Initial payment is required', 'initial_payment_required' );
-			}
-
-			if ( $initial_payment < 0 ) {
-				return $this->error( 'Initial payment cannot be negative', 'invalid_price' );
-			}
+		$initial_payment = $this->get_validated_param( $data, 'initial_payment', 0, 'float' );
+		if ( $rules['require_initial_payment'] && 0 === $initial_payment ) {
+			return $this->error( 'Initial payment is required', 'initial_payment_required' );
+		}
+		if ( $initial_payment < 0 ) {
+			return $this->error( 'Initial payment cannot be negative', 'invalid_price' );
 		}
 
-		// Validate cycle period.
+		// Validate cycle period and number.
 		if ( isset( $data['cycle_period'] ) && ! empty( $data['cycle_period'] ) ) {
 			if ( ! in_array( $data['cycle_period'], $rules['allowed_periods'], true ) ) {
 				return $this->error( 'Invalid cycle period', 'invalid_cycle_period' );
 			}
 		}
 
-		// Validate cycle number.
-		if ( isset( $data['cycle_number'] ) && ! empty( $data['cycle_number'] ) ) {
-			if ( ! in_array( intval( $data['cycle_number'] ), $rules['allowed_cycle_numbers'], true ) ) {
-				return $this->error( 'Invalid cycle number', 'invalid_cycle_number' );
-			}
+		$cycle_number = $this->get_validated_param( $data, 'cycle_number', 0, 'int' );
+		if ( $cycle_number > 0 && ! in_array( $cycle_number, $rules['allowed_cycle_numbers'], true ) ) {
+			return $this->error( 'Invalid cycle number', 'invalid_cycle_number' );
 		}
 
 		// Validate billing limit (must be non-negative integer).
-		if ( isset( $data['billing_limit'] ) ) {
-			$billing_limit = intval( $data['billing_limit'] );
-			if ( $billing_limit < 0 ) {
-				return $this->error( 'Billing limit cannot be negative', 'invalid_billing_limit' );
-			}
+		$billing_limit = $this->get_validated_param( $data, 'billing_limit', 0, 'int' );
+		if ( $billing_limit < 0 ) {
+			return $this->error( 'Billing limit cannot be negative', 'invalid_billing_limit' );
 		}
 
 		// Check rate limiting.
@@ -366,6 +350,36 @@ class PMPRO_Magic_Levels_Validator {
 		}
 
 		return '';
+	}
+
+	/**
+	 * Extract and validate numeric parameter.
+	 *
+	 * @since 1.0.0
+	 * @param array  $data Parameter data.
+	 * @param string $key  Parameter key.
+	 * @param mixed  $default Default value.
+	 * @param string $type Type (int|float).
+	 * @return mixed Validated value.
+	 */
+	private function get_validated_param( $data, $key, $default = 0, $type = 'int' ) {
+		if ( ! isset( $data[ $key ] ) ) {
+			return $default;
+		}
+
+		$value = $data[ $key ];
+
+		if ( 'int' === $type ) {
+			return intval( $value );
+		} elseif ( 'float' === $type ) {
+			// Parse formatted currency strings (e.g., "¥219,450" or "$1,234.56").
+			if ( is_string( $value ) ) {
+				$value = preg_replace( '/[^0-9.]/', '', $value );
+			}
+			return floatval( $value );
+		}
+
+		return $value;
 	}
 
 	/**

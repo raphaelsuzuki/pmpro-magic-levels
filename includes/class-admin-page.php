@@ -89,68 +89,98 @@ class PMPRO_Magic_Levels_Admin
 
 
 	/**
-	 * Create a new additional token.
+	 * Handle token operations (create, revoke, rotate).
 	 *
 	 * @since 1.1.0
-	 *
+	 * @param string $action The action to perform.
+	 * @param string $nonce_action The nonce action to verify.
 	 * @return void
 	 */
-	public static function create_token()
+	private static function handle_token_operation($action, $nonce_action)
 	{
-		check_admin_referer('pmpro_ml_create_token');
+		check_admin_referer($nonce_action);
 
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Unauthorized', 'pmpro-magic-levels'));
 		}
 
-		$name = isset($_POST['token_name']) ? sanitize_text_field($_POST['token_name']) : '';
-
-		if (empty($name)) {
-			wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_error=' . urlencode(__('Token name is required', 'pmpro-magic-levels'))));
-			exit;
+		if (!class_exists('PMPRO_Magic_Levels_Token_Manager')) {
+			self::redirect_with_error(__('Token Manager not loaded', 'pmpro-magic-levels'));
 		}
 
-		if (class_exists('PMPRO_Magic_Levels_Token_Manager')) {
-			$result = PMPRO_Magic_Levels_Token_Manager::create_token($name);
-
-			if (is_wp_error($result)) {
-				wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_error=' . urlencode($result->get_error_message())));
-			} else {
-				// Redirect with the fresh token to show once.
+		switch ($action) {
+			case 'create':
+				$name = isset($_POST['token_name']) ? sanitize_text_field($_POST['token_name']) : '';
+				if (empty($name)) {
+					self::redirect_with_error(__('Token name is required', 'pmpro-magic-levels'));
+				}
+				
+				$result = PMPRO_Magic_Levels_Token_Manager::create_token($name);
+				if (is_wp_error($result)) {
+					self::redirect_with_error($result->get_error_message());
+				}
+				
 				set_transient('pmpro_ml_new_token_' . get_current_user_id(), $result, 60);
 				wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_created=1'));
-			}
-		} else {
-			wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_error=' . urlencode(__('Token Manager not loaded', 'pmpro-magic-levels'))));
+				break;
+
+			case 'revoke':
+				$token_id = isset($_POST['token_id']) ? sanitize_text_field($_POST['token_id']) : '';
+				if (PMPRO_Magic_Levels_Token_Manager::revoke_token($token_id)) {
+					wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_revoked=1'));
+				} else {
+					self::redirect_with_error(__('Failed to revoke token', 'pmpro-magic-levels'));
+				}
+				break;
+
+			case 'rotate':
+				$token_id = isset($_POST['token_id']) ? sanitize_text_field($_POST['token_id']) : '';
+				$result = PMPRO_Magic_Levels_Token_Manager::rotate_token($token_id);
+				
+				if (is_wp_error($result)) {
+					self::redirect_with_error($result->get_error_message());
+				}
+				
+				set_transient('pmpro_ml_new_token_' . get_current_user_id(), $result, 60);
+				wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_rotated=1'));
+				break;
 		}
 		exit;
+	}
+
+	/**
+	 * Helper method to redirect with error message.
+	 *
+	 * @since 1.1.0
+	 * @param string $message Error message.
+	 * @return void
+	 */
+	private static function redirect_with_error($message)
+	{
+		wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_error=' . urlencode($message)));
+		exit;
+	}
+
+	/**
+	 * Create a new additional token.
+	 *
+	 * @since 1.1.0
+	 * @return void
+	 */
+	public static function create_token()
+	{
+		self::handle_token_operation('create', 'pmpro_ml_create_token');
 	}
 
 	/**
 	 * Revoke an additional token.
 	 *
 	 * @since 1.1.0
-	 *
 	 * @return void
 	 */
 	public static function revoke_token()
 	{
-		check_admin_referer('pmpro_ml_revoke_token');
-
-		if (!current_user_can('manage_options')) {
-			wp_die(esc_html__('Unauthorized', 'pmpro-magic-levels'));
-		}
-
-		$token_id = isset($_POST['token_id']) ? sanitize_text_field($_POST['token_id']) : '';
-
-		if (class_exists('PMPRO_Magic_Levels_Token_Manager')) {
-			if (PMPRO_Magic_Levels_Token_Manager::revoke_token($token_id)) {
-				wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_revoked=1'));
-			} else {
-				wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_error=' . urlencode(__('Failed to revoke token', 'pmpro-magic-levels'))));
-			}
-		}
-		exit;
+		self::handle_token_operation('revoke', 'pmpro_ml_revoke_token');
 	}
 
 	/**
@@ -161,28 +191,7 @@ class PMPRO_Magic_Levels_Admin
 	 */
 	public static function rotate_token()
 	{
-		check_admin_referer('pmpro_ml_rotate_token');
-
-		if (!current_user_can('manage_options')) {
-			wp_die(esc_html__('Unauthorized', 'pmpro-magic-levels'));
-		}
-
-		$token_id = isset($_POST['token_id']) ? sanitize_text_field($_POST['token_id']) : '';
-
-		if (class_exists('PMPRO_Magic_Levels_Token_Manager')) {
-			$result = PMPRO_Magic_Levels_Token_Manager::rotate_token($token_id);
-
-			if (is_wp_error($result)) {
-				wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_error=' . urlencode($result->get_error_message())));
-			} else {
-				// Redirect with the fresh token to show once.
-				set_transient('pmpro_ml_new_token_' . get_current_user_id(), $result, 60);
-				wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_rotated=1'));
-			}
-		} else {
-			wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_error=' . urlencode(__('Token Manager not loaded', 'pmpro-magic-levels'))));
-		}
-		exit;
+		self::handle_token_operation('rotate', 'pmpro_ml_rotate_token');
 	}
 
 	/**
