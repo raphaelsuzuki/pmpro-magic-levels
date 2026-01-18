@@ -74,7 +74,7 @@ curl -X POST https://yoursite.com/wp-json/pmpro-magic-levels/v1/process \
 
 ---
 
-## Documentation & Support
+## Documentation
 
 Comprehensive guides, technical specifications, and advanced validation rules are available on our **[GitHub Wiki](https://github.com/raphaelsuzuki/pmpro-magic-levels/wiki)**.
 
@@ -88,8 +88,24 @@ Comprehensive guides, technical specifications, and advanced validation rules ar
 *   [**Integration Guides**](https://github.com/raphaelsuzuki/pmpro-magic-levels/wiki/Home#integration-guides) - WSForm, CF7, Formidable Forms.
 *   [**Troubleshooting & FAQ**](https://github.com/raphaelsuzuki/pmpro-magic-levels/wiki/Troubleshooting) - Common issues and solutions.
 
-### Support
-For bugs and feature requests, please open an [issue](https://github.com/raphaelsuzuki/pmpro-magic-levels/issues).
+## Support
 
-### License
-GPL v2 or later
+- **Issues:** [GitHub Issues](https://github.com/raphaelsuzuki/pmpro-magic-levels/issues)
+- **Documentation:** [GitHub Wiki](https://github.com/raphaelsuzuki/pmpro-magic-levels/wiki) and inline help
+- **Updates:** Automatic via Git Updater
+
+## Contributing
+
+Contributions are welcome! Please submit pull requests or open issues on GitHub.
+
+- **Repository:** https://github.com/raphaelsuzuki/pmpro-magic-levels
+- **Bug Reports:** Use GitHub Issues for bug reports and feature requests
+- **Pull Requests:** Follow [WordPress Coding Standards](https://github.com/raphaelsuzuki/pmpro-magic-levels/blob/main/CONTRIBUTING.md#coding-standards)
+
+## License
+
+GPL v2 or later - https://www.gnu.org/licenses/gpl-2.0.html
+
+## Disclaimer
+
+This repository and its documentation were created with the assistance of AI. While efforts have been made to ensure accuracy and completeness, no guarantee is provided. Use at your own risk. Always test in a safe environment before deploying to production.
