@@ -85,9 +85,6 @@ class PMPRO_Magic_Levels_Admin
 		register_setting('pmpro_magic_levels', 'pmpro_ml_webhook_enabled');
 	}
 
-
-
-
 	/**
 	 * Create a new additional token.
 	 *
@@ -103,7 +100,7 @@ class PMPRO_Magic_Levels_Admin
 			wp_die(esc_html__('Unauthorized', 'pmpro-magic-levels'));
 		}
 
-		$name = isset($_POST['token_name']) ? sanitize_text_field($_POST['token_name']) : '';
+		$name = isset($_POST['token_name']) ? sanitize_text_field(wp_unslash($_POST['token_name'])) : '';
 
 		if (empty($name)) {
 			wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&token_error=' . urlencode(__('Token name is required', 'pmpro-magic-levels'))));
@@ -141,7 +138,7 @@ class PMPRO_Magic_Levels_Admin
 			wp_die(esc_html__('Unauthorized', 'pmpro-magic-levels'));
 		}
 
-		$token_id = isset($_POST['token_id']) ? sanitize_text_field($_POST['token_id']) : '';
+		$token_id = isset($_POST['token_id']) ? sanitize_text_field(wp_unslash($_POST['token_id'])) : '';
 
 		if (class_exists('PMPRO_Magic_Levels_Token_Manager')) {
 			if (PMPRO_Magic_Levels_Token_Manager::revoke_token($token_id)) {
@@ -167,7 +164,7 @@ class PMPRO_Magic_Levels_Admin
 			wp_die(esc_html__('Unauthorized', 'pmpro-magic-levels'));
 		}
 
-		$token_id = isset($_POST['token_id']) ? sanitize_text_field($_POST['token_id']) : '';
+		$token_id = isset($_POST['token_id']) ? sanitize_text_field(wp_unslash($_POST['token_id'])) : '';
 
 		if (class_exists('PMPRO_Magic_Levels_Token_Manager')) {
 			$result = PMPRO_Magic_Levels_Token_Manager::rotate_token($token_id);
@@ -203,7 +200,7 @@ class PMPRO_Magic_Levels_Admin
 		// Check if webhook is enabled.
 		$is_enabled = get_option('pmpro_ml_webhook_enabled', '0') === '1';
 		if (!apply_filters('pmpro_magic_levels_enable_webhook', $is_enabled)) {
-			wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&test_error=' . urlencode(__('The Webhook Endpoint is currently disabled. Enable it above to run the self-test.', 'pmpro-magic-levels'))));
+			wp_redirect(admin_url('admin.php?page=pmpro-magic-levels&test_error=' . urlencode(__('The REST API Endpoint is currently disabled. Enable it above to run the self-test.', 'pmpro-magic-levels'))));
 			exit;
 		}
 
@@ -231,7 +228,7 @@ class PMPRO_Magic_Levels_Admin
 
 		$test_data = array(
 			'name' => 'TEST GROUP - ' . sprintf(__('TEST LEVEL %s', 'pmpro-magic-levels'), $random_id),
-			'description' => __('This is a test level created by PMPro Magic Levels webhook test. You can safely delete this level.', 'pmpro-magic-levels'),
+			'description' => __('This is a test level created by PMPro Magic Levels REST API test. You can safely delete this level.', 'pmpro-magic-levels'),
 			'confirmation' => sprintf(__('Thank you for joining TEST LEVEL %s! This is a test confirmation message.', 'pmpro-magic-levels'), $random_id),
 			'account_message' => sprintf(__('Welcome to TEST LEVEL %s! Your benefits include: Test access, Demo features, Sample content. This is a test account message.', 'pmpro-magic-levels'), $random_id),
 			'billing_amount' => $billing_amount,
@@ -249,16 +246,22 @@ class PMPRO_Magic_Levels_Admin
 		// Add content protection if categories/pages exist.
 		$test_categories = get_categories(array('number' => 3, 'hide_empty' => false));
 		if (!empty($test_categories)) {
-			$test_data['protected_categories'] = array_map(function ($cat) {
-				return $cat->term_id;
-			}, array_slice($test_categories, 0, 2)); // Protect first 2 categories
+			$test_data['protected_categories'] = array_map(
+				function ($cat) {
+					return $cat->term_id;
+				},
+				array_slice($test_categories, 0, 2)
+			); // Protect first 2 categories
 		}
 
 		$test_pages = get_pages(array('number' => 3));
 		if (!empty($test_pages)) {
-			$test_data['protected_pages'] = array_map(function ($page) {
-				return $page->ID;
-			}, array_slice($test_pages, 0, 1)); // Protect first page
+			$test_data['protected_pages'] = array_map(
+				function ($page) {
+					return $page->ID;
+				},
+				array_slice($test_pages, 0, 1)
+			); // Protect first page
 		}
 
 		// Make HTTP POST request to webhook endpoint.
@@ -348,7 +351,7 @@ class PMPRO_Magic_Levels_Admin
 
 			<?php if (isset($_GET['test_success'])): ?>
 				<div class="notice notice-success is-dismissible">
-					<p><strong><?php esc_html_e('Webhook Test Successful!', 'pmpro-magic-levels'); ?></strong>
+					<p><strong><?php esc_html_e('REST API Test Successful!', 'pmpro-magic-levels'); ?></strong>
 						<?php esc_html_e('A test membership level was created. You can safely delete it.', 'pmpro-magic-levels'); ?>
 					</p>
 				</div>
@@ -429,7 +432,7 @@ class PMPRO_Magic_Levels_Admin
 					</div>
 					<div class="pmpro_section_inside">
 						<p>
-							<?php esc_html_e('The Webhook Endpoint allows external services and forms to create membership levels via HTTP POST requests. All requests are secured with Bearer token authentication using a cryptographically secure 64-character key.', 'pmpro-magic-levels'); ?>
+							<?php esc_html_e('The REST API Endpoint allows external services and forms to create membership levels via HTTP POST requests. All requests are secured with Bearer Token authentication using a cryptographically secure 64-character key.', 'pmpro-magic-levels'); ?>
 						</p>
 
 						<form method="post" action="" class="pmpro_section_form">
@@ -444,7 +447,7 @@ class PMPRO_Magic_Levels_Admin
 												class="pmpro_ml_toggle_label"><?php esc_html_e('Allow external requests via REST API', 'pmpro-magic-levels'); ?></span>
 										</label>
 										<p class="description">
-											<?php esc_html_e('Uncheck this if you are only using the internal PHP integration (Recommended).', 'pmpro-magic-levels'); ?>
+											<?php esc_html_e('Uncheck this if you are only using the Internal PHP Integration (Recommended).', 'pmpro-magic-levels'); ?>
 										</p>
 										<br>
 										<input type="submit" name="pmpro_ml_save_settings" class="button button-primary"
@@ -464,10 +467,11 @@ class PMPRO_Magic_Levels_Admin
 							</table>
 						</form>
 
-						<div class="notice notice-info inline" <?php if ('0' === $webhook_enabled)
-							echo 'style="opacity: 0.5; filter: grayscale(1);"'; ?>>
+						<div class="notice notice-info inline" <?php if ('0' === $webhook_enabled) {
+							echo 'style="opacity: 0.5; filter: grayscale(1);"';
+						} ?>>
 							<p>
-								<strong><?php esc_html_e('Webhook Endpoint URL:', 'pmpro-magic-levels'); ?></strong><br>
+								<strong><?php esc_html_e('REST API Endpoint URL:', 'pmpro-magic-levels'); ?></strong><br>
 								<input type="text" readonly
 									value="<?php echo esc_url(rest_url('pmpro-magic-levels/v1/process')); ?>"
 									class="large-text code" onclick="this.select();">
@@ -527,8 +531,7 @@ class PMPRO_Magic_Levels_Admin
 													<input type="hidden" name="action" value="pmpro_ml_rotate_token">
 													<input type="hidden" name="token_id" value="<?php echo esc_attr($id); ?>">
 													<?php wp_nonce_field('pmpro_ml_rotate_token'); ?>
-													<button type="submit" class="button-link"
-														style="text-decoration: none;">
+													<button type="submit" class="button-link" style="text-decoration: none;">
 														<?php esc_html_e('Rotate', 'pmpro-magic-levels'); ?>
 													</button>
 												</form>
@@ -555,7 +558,7 @@ class PMPRO_Magic_Levels_Admin
 								class="button button-secondary"><?php esc_html_e('Generate Token', 'pmpro-magic-levels'); ?></button>
 						</form>
 
-						<h4><?php esc_html_e('Test Webhook', 'pmpro-magic-levels'); ?></h4>
+						<h4><?php esc_html_e('Test REST API Endpoint', 'pmpro-magic-levels'); ?></h4>
 						<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
 							<input type="hidden" name="action" value="pmpro_ml_test_webhook">
 							<?php wp_nonce_field('pmpro_ml_test_webhook'); ?>
@@ -580,7 +583,7 @@ class PMPRO_Magic_Levels_Admin
 					</button>
 				</div>
 				<div class="pmpro_section_inside">
-					<p><?php esc_html_e('The parameters below are supported by both the internal PHP function pmpro_magic_levels_process() and the external Webhook Endpoint (REST API):', 'pmpro-magic-levels'); ?>
+					<p><?php esc_html_e('The parameters below are supported by both the Internal PHP Integration function pmpro_magic_levels_process() and the REST API Integration (Remote):', 'pmpro-magic-levels'); ?>
 					</p>
 
 					<table class="widefat striped">
@@ -657,7 +660,8 @@ class PMPRO_Magic_Levels_Admin
 								</td>
 								<td>float</td>
 								<td>Defaults to 0</td>
-								<td><?php esc_html_e('One-time initial payment. Example: 49.99', 'pmpro-magic-levels'); ?></td>
+								<td><?php esc_html_e('One-time initial payment. Example: 49.99', 'pmpro-magic-levels'); ?>
+								</td>
 							</tr>
 							<tr>
 								<td><input type="text" readonly value="cycle_number" onclick="this.select();"
@@ -797,7 +801,7 @@ class PMPRO_Magic_Levels_Admin
 					</button>
 				</div>
 				<div class="pmpro_section_inside">
-					<p><?php esc_html_e('The following validation rules are applied to all level creation requests (Webhook Endpoint and custom integrations):', 'pmpro-magic-levels'); ?>
+					<p><?php esc_html_e('The following validation rules are applied to all level creation requests (REST API Endpoint and custom integrations):', 'pmpro-magic-levels'); ?>
 					</p>
 
 					<table class="widefat striped">
@@ -918,7 +922,7 @@ class PMPRO_Magic_Levels_Admin
 		);
 
 		$tests['direct']['pmpro_magic_levels_webhook'] = array(
-			'label' => __('PMPro Magic Levels Webhook', 'pmpro-magic-levels'),
+			'label' => __('PMPro Magic Levels REST API', 'pmpro-magic-levels'),
 			'test' => array(__CLASS__, 'test_webhook_config'),
 		);
 
@@ -950,7 +954,7 @@ class PMPRO_Magic_Levels_Admin
 		if (!apply_filters('pmpro_magic_levels_enable_webhook', $is_enabled)) {
 			$result['status'] = 'recommended';
 			$result['label'] = __('REST API Webhook is disabled', 'pmpro-magic-levels');
-			$result['description'] = sprintf('<p>%s</p>', __('The REST API Webhook is currently disabled. This is recommended if you are only using the internal PHP integration. You can enable it in PMPro > Magic Levels if needed for external services.', 'pmpro-magic-levels'));
+			$result['description'] = sprintf('<p>%s</p>', __('The REST API Endpoint is currently disabled. This is recommended if you are only using the Internal PHP Integration. You can enable it in PMPro > Magic Levels if needed for external services.', 'pmpro-magic-levels'));
 			return $result;
 		}
 
@@ -1007,7 +1011,7 @@ class PMPRO_Magic_Levels_Admin
 		if (empty(PMPRO_Magic_Levels_Token_Manager::get_tokens())) {
 			$result['status'] = 'recommended';
 			$result['label'] = __('No access tokens configured', 'pmpro-magic-levels');
-			$result['description'] = sprintf('<p>%s <a href="' . admin_url('admin.php?page=pmpro-magic-levels') . '">%s</a></p>', __('The Webhook Endpoint is active but no access tokens are configured. Visit', 'pmpro-magic-levels'), __('PMPro > Magic Levels to generate a token.', 'pmpro-magic-levels'));
+			$result['description'] = sprintf('<p>%s <a href="' . admin_url('admin.php?page=pmpro-magic-levels') . '">%s</a></p>', __('The REST API Endpoint is active but no access tokens are configured. Visit', 'pmpro-magic-levels'), __('PMPro > Magic Levels to generate a token.', 'pmpro-magic-levels'));
 			return $result;
 		}
 
