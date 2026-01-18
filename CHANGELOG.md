@@ -5,17 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Fixed
-- Fixed unreachable return statement after WP_Error in validation logic.
-- Improved WordPress Coding Standards (WPCS) compliance across the codebase.
-
-### Changed
-- Updated default branch reference from master to main.
-- Simplified README.md for better readability and moved technical details to the Wiki.
-
-## [1.2.0] - 2025-12-28
+## [1.2.0] - 2026-01-18
 
 ### Added
 - **Token Rotation (Manual)**: Admins can now rotate existing bearer tokens from the settings page. This generates a new raw token and replaces the stored hash.
@@ -27,10 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Documentation Migration**: Moved all documentation from the local /docs directory to the GitHub Wiki.
 - **Admin UI**: Updated documentation links within the WordPress admin to point to the new Wiki locations.
+- **Project Structure**: Updated default branch reference from master to main and simplified README.md.
+- **Terminology**: Improved REST API terminology across the admin interface.
 
 ### Fixed
-- **Prepared Statement Safety**: Validates placeholder counts and uses argument unpacking to ensure SQL queries receive exact replacement values.
-- **Metadata Consistency**: Fixed repository metadata and default branch links.
+- **Security**: Validates placeholder counts and uses argument unpacking to ensure SQL queries receive exact replacement values.
+- **WPCS**: Improved WordPress Coding Standards (WPCS) compliance and fixed unreachable return statements.
+- **Metadata**: Fixed repository metadata and default branch links.
+
+## [Unreleased]
 
 ## [1.1.0] - 2024-12-12
 
