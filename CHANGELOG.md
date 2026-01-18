@@ -7,16 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fixed unreachable return statement after WP_Error in validation logic.
+- Improved WordPress Coding Standards (WPCS) compliance across the codebase.
+
+### Changed
+- Updated default branch reference from master to main.
+- Simplified README.md for better readability and moved technical details to the Wiki.
+
 ## [1.2.0] - 2025-12-28
 
 ### Added
+- **Token Rotation (Manual)**: Admins can now rotate existing bearer tokens from the settings page. This generates a new raw token and replaces the stored hash.
+- **Lightweight Audit Logging**: Token lifecycle events (rotation, revocation, validation results) are written to the system log as structured JSON.
+- **Privacy Controls**: Webhook logging is now opt-in to avoid storing PII by default.
+- **Data Redaction**: Sensitive data is automatically redacted from REST debug output and system logs.
+- **Rate Limiting Support**: The API now returns 429 Too Many Requests with a Retry-After header when limits are reached.
 
-- **Token Rotation (Manual)**: Admins can now rotate ("roll") existing bearer tokens from the PMPro > Magic Levels admin page. Rotation generates a new raw token, replaces the stored hash, and displays the new token once for secure copy.
-- **Lightweight Audit Logging**: Token lifecycle events (rotation, revocation, validation results) are written to the system/PHP log as structured JSON for development diagnostics. Integrators can forward these events to external logging systems via the new `pmpro_magic_levels_audit` action.
+### Changed
+- **Documentation Migration**: Moved all documentation from the local /docs directory to the GitHub Wiki.
+- **Admin UI**: Updated documentation links within the WordPress admin to point to the new Wiki locations.
 
 ### Fixed
-
-- **Prepared statement safety**: Fixed an issue in `find_matching_level()` where an array of values could be passed incorrectly to `$wpdb->prepare()`. The code now validates placeholder counts and uses argument unpacking to ensure prepared queries receive exact replacement values.
+- **Prepared Statement Safety**: Validates placeholder counts and uses argument unpacking to ensure SQL queries receive exact replacement values.
+- **Metadata Consistency**: Fixed repository metadata and default branch links.
 
 ## [1.1.0] - 2024-12-12
 
@@ -68,7 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - More realistic test data generation
 
 #### Documentation
-- **Complete Content Protection Guide**: New `docs/content-protection.md` with 300+ lines
+- **Complete Content Protection Guide**: New [Content Protection](https://github.com/raphaelsuzuki/pmpro-magic-levels/wiki/Content-Protection) guide on the Wiki
 - **Usage Examples**: New `examples/content-protection-example.php` with 10 complete examples
 - **Research Documentation**: `RESEARCH-CONTENT-PROTECTION.md` with PMPro integration details
 - **Updated README**: Added content protection examples and documentation links
@@ -194,7 +208,7 @@ $result = pmpro_magic_levels_process([
 ## Links
 
 - [Repository](https://github.com/raphaelsuzuki/pmpro-magic-levels)
-- [Documentation](docs/)
-- [Content Protection Guide](docs/content-protection.md)
+- [Documentation (Wiki)](https://github.com/raphaelsuzuki/pmpro-magic-levels/wiki)
+- [Content Protection Guide](https://github.com/raphaelsuzuki/pmpro-magic-levels/wiki/Content-Protection)
 - [Examples](examples/)
-- [Security Guide](docs/security.md)
+- [Security Guide](https://github.com/raphaelsuzuki/pmpro-magic-levels/wiki/Security-Best-Practices)

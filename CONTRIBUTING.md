@@ -57,9 +57,9 @@ Before submitting a PR:
 
 If your contribution adds or changes functionality:
 
-1. Update relevant documentation in `/docs`
+1. Update relevant documentation on the [Wiki](https://github.com/raphaelsuzuki/pmpro-magic-levels/wiki)
 2. Add code examples if applicable
-3. Update filters.md if adding new filters
+3. Update [Filters Reference](https://github.com/raphaelsuzuki/pmpro-magic-levels/wiki/Filters-Reference) if adding new filters
 4. Update README.md if needed
 
 ## Questions?
