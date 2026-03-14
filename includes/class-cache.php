@@ -36,6 +36,7 @@ class PMPRO_Magic_Levels_Cache {
 	public static function generate_key( $params ) {
 		$key_data = array(
 			'name'              => isset( $params['name'] ) ? $params['name'] : '',
+			'description'       => isset( $params['description'] ) ? $params['description'] : '',
 			'billing_amount'    => isset( $params['billing_amount'] ) ? $params['billing_amount'] : 0,
 			'cycle_number'      => isset( $params['cycle_number'] ) ? $params['cycle_number'] : 0,
 			'cycle_period'      => isset( $params['cycle_period'] ) ? $params['cycle_period'] : '',

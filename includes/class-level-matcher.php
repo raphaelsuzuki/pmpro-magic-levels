@@ -104,6 +104,11 @@ class PMPRO_Magic_Levels_Level_Matcher
 		$where_conditions[] = 'name = %s';
 		$where_values[] = $params['name'];
 
+		// Description.
+		$description = isset($params['description']) ? $params['description'] : '';
+		$where_conditions[] = 'description = %s';
+		$where_values[] = $description;
+
 		// Billing amount.
 		$billing_amount = isset($params['billing_amount']) ? floatval($params['billing_amount']) : 0;
 		$where_conditions[] = 'billing_amount = %f';
