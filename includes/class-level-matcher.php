@@ -102,7 +102,12 @@ class PMPRO_Magic_Levels_Level_Matcher
 
 		// Name (required).
 		$where_conditions[] = 'name = %s';
-		$where_values[] = $params['name'];
+		$where_values[] = sanitize_text_field($params['name']);
+
+		// Description.
+		$description = isset($params['description']) ? sanitize_textarea_field($params['description']) : '';
+		$where_conditions[] = 'description = %s';
+		$where_values[] = $description;
 
 		// Billing amount.
 		$billing_amount = isset($params['billing_amount']) ? floatval($params['billing_amount']) : 0;
@@ -115,7 +120,7 @@ class PMPRO_Magic_Levels_Level_Matcher
 		$where_values[] = $cycle_number;
 
 		// Cycle period.
-		$cycle_period = isset($params['cycle_period']) ? $params['cycle_period'] : '';
+		$cycle_period = isset($params['cycle_period']) ? sanitize_text_field($params['cycle_period']) : '';
 		$where_conditions[] = 'cycle_period = %s';
 		$where_values[] = $cycle_period;
 
@@ -145,7 +150,7 @@ class PMPRO_Magic_Levels_Level_Matcher
 		$where_values[] = $expiration_number;
 
 		// Expiration period.
-		$expiration_period = isset($params['expiration_period']) ? $params['expiration_period'] : '';
+		$expiration_period = isset($params['expiration_period']) ? sanitize_text_field($params['expiration_period']) : '';
 		$where_conditions[] = 'expiration_period = %s';
 		$where_values[] = $expiration_period;
 
