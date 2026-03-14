@@ -35,17 +35,17 @@ class PMPRO_Magic_Levels_Cache {
 	 */
 	public static function generate_key( $params ) {
 		$key_data = array(
-			'name'              => isset( $params['name'] ) ? $params['name'] : '',
-			'description'       => isset( $params['description'] ) ? $params['description'] : '',
+			'name'              => isset( $params['name'] ) ? sanitize_text_field( $params['name'] ) : '',
+			'description'       => isset( $params['description'] ) ? sanitize_textarea_field( $params['description'] ) : '',
 			'billing_amount'    => isset( $params['billing_amount'] ) ? $params['billing_amount'] : 0,
 			'cycle_number'      => isset( $params['cycle_number'] ) ? $params['cycle_number'] : 0,
-			'cycle_period'      => isset( $params['cycle_period'] ) ? $params['cycle_period'] : '',
+			'cycle_period'      => isset( $params['cycle_period'] ) ? sanitize_text_field( $params['cycle_period'] ) : '',
 			'initial_payment'   => isset( $params['initial_payment'] ) ? $params['initial_payment'] : 0,
 			'trial_amount'      => isset( $params['trial_amount'] ) ? $params['trial_amount'] : 0,
 			'trial_limit'       => isset( $params['trial_limit'] ) ? $params['trial_limit'] : 0,
 			'billing_limit'     => isset( $params['billing_limit'] ) ? $params['billing_limit'] : 0,
 			'expiration_number' => isset( $params['expiration_number'] ) ? $params['expiration_number'] : 0,
-			'expiration_period' => isset( $params['expiration_period'] ) ? $params['expiration_period'] : '',
+			'expiration_period' => isset( $params['expiration_period'] ) ? sanitize_text_field( $params['expiration_period'] ) : '',
 		);
 
 		return 'pmpro_magic_level_' . md5( wp_json_encode( $key_data ) );
