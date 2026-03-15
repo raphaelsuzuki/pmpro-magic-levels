@@ -2,7 +2,9 @@
   "name": "raphaelsuzuki/pmpro-magic-levels",
   "description": "PMPro Magic Levels development tooling",
   "type": "project",
-  "require": {},
+  "require": {
+    "php": ">=7.4"
+  },
   "require-dev": {
     "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
     "phpunit/phpunit": "^9.6",
