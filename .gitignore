@@ -9,7 +9,6 @@ wp-content/wp-cache-config.php
 # Plugin development
 node_modules/
 vendor/
-composer.lock
 package-lock.json
 *.log
 
