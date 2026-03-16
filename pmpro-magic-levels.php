@@ -196,7 +196,8 @@ function pmpro_magic_levels_activate() {
 	$table_name = $wpdb->pmpro_membership_levels;
 
 	// Check if index exists.
-	// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name comes from trusted $wpdb schema metadata.
+	// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	// Table name comes from trusted $wpdb schema metadata.
 	$index_exists = $wpdb->get_results(
 		$wpdb->prepare(
 			"SHOW INDEX FROM {$table_name} WHERE Key_name = %s",

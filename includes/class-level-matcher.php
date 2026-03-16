@@ -148,7 +148,9 @@ class PMPRO_Magic_Levels_Level_Matcher {
 		$where_values[]     = $expiration_number;
 
 		// Expiration period.
-		$expiration_period  = isset( $params['expiration_period'] ) ? sanitize_text_field( $params['expiration_period'] ) : '';
+		$expiration_period  = isset( $params['expiration_period'] )
+			? sanitize_text_field( $params['expiration_period'] )
+			: '';
 		$where_conditions[] = 'expiration_period = %s';
 		$where_values[]     = $expiration_period;
 
@@ -222,7 +224,9 @@ class PMPRO_Magic_Levels_Level_Matcher {
 		$level->trial_amount      = isset( $params['trial_amount'] ) ? floatval( $params['trial_amount'] ) : 0;
 		$level->trial_limit       = isset( $params['trial_limit'] ) ? intval( $params['trial_limit'] ) : 0;
 		$level->expiration_number = isset( $params['expiration_number'] ) ? intval( $params['expiration_number'] ) : 0;
-		$level->expiration_period = isset( $params['expiration_period'] ) ? sanitize_text_field( $params['expiration_period'] ) : '';
+		$level->expiration_period = isset( $params['expiration_period'] )
+			? sanitize_text_field( $params['expiration_period'] )
+			: '';
 		$level->allow_signups     = isset( $params['allow_signups'] ) ? intval( $params['allow_signups'] ) : 1;
 
 		// Save level.
@@ -419,7 +423,8 @@ class PMPRO_Magic_Levels_Level_Matcher {
 		}
 
 		// Check if relationship already exists.
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is internally derived from $wpdb prefix.
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// Table name is internally derived from $wpdb prefix.
 		$exists = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$groups_rel_table} WHERE `group` = %d AND `level` = %d",
