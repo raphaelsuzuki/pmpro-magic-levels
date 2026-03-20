@@ -54,11 +54,16 @@ Use these commit/PR title types:
 - `chore`: Maintenance tasks
 - `revert`: Reverts a previous commit
 
+For major version bumps, mark breaking changes with:
+- `type(scope)!: short description`
+- or include `BREAKING CHANGE: <description>` in the commit body/footer
+
 Examples:
 
 - `feat(api): support token rotation endpoint`
 - `fix(cache): normalize transient cache keys`
 - `chore: update CI action pins`
+- `feat(api)!: replace token format with JWT`
 
 ## Coding Standards
 

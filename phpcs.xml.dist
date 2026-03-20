@@ -6,10 +6,7 @@
   <arg name="colors"/>
   <arg name="parallel" value="4"/>
 
-  <file>includes/class-cache.php</file>
-  <file>includes/class-level-matcher.php</file>
-  <file>pmpro-magic-levels.php</file>
-  <file>tests</file>
+  <file>.</file>
 
   <exclude-pattern>*/vendor/*</exclude-pattern>
 
