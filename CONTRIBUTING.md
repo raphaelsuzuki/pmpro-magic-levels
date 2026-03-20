@@ -32,6 +32,34 @@ Thank you for considering contributing to PMPro Magic Levels!
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
 
+## Commit and Release Policy
+
+This repository enforces [Conventional Commits](https://www.conventionalcommits.org/) and [Semantic Versioning](https://semver.org/).
+
+- Pull request titles must use Conventional Commits format.
+- Individual commits in pull requests must use Conventional Commits format.
+- Releases are managed by release-please from conventional commit history.
+
+Use these commit/PR title types:
+
+- `feat`: New features (minor version bump)
+- `fix`: Bug fixes (patch version bump)
+- `docs`: Documentation only changes
+- `style`: Formatting and style-only changes
+- `refactor`: Code changes that do not fix a bug or add a feature
+- `perf`: Performance improvements
+- `test`: Test-only changes
+- `build`: Build/dependency/tooling changes
+- `ci`: CI/CD workflow changes
+- `chore`: Maintenance tasks
+- `revert`: Reverts a previous commit
+
+Examples:
+
+- `feat(api): support token rotation endpoint`
+- `fix(cache): normalize transient cache keys`
+- `chore: update CI action pins`
+
 ## Coding Standards
 
 We follow [WordPress Coding Standards](https://developer.wordpress.org/coding-standards/wordpress-coding-standards/):
