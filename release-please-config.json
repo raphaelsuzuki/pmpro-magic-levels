@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "simple",
+  "include-component-in-tag": false,
+  "include-v-in-tag": true,
+  "extra-files": [
+    {
+      "type": "generic",
+      "path": "pmpro-magic-levels.php"
+    }
+  ],
+  "packages": {
+    ".": {
+      "changelog-path": "CHANGELOG.md"
+    }
+  }
+}
