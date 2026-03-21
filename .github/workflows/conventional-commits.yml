@@ -42,3 +42,4 @@ jobs:
         uses: wagoid/commitlint-github-action@v6
         with:
           configFile: .commitlintrc.json
+          commitDepth: 1
